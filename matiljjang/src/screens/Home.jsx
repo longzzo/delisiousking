@@ -9,7 +9,17 @@ const CATS = [
   { k: '전체', icon: '🍽️' }, { k: '한식', icon: '🍚' }, { k: '중식', icon: '🥟' },
   { k: '일식', icon: '🍣' }, { k: '분식', icon: '🍢' }, { k: '카페', icon: '☕' }, { k: '치킨', icon: '🍗' },
 ]
-const BUDGETS = ['전체', '6천원 이하', '8천원 이하', '1만원 이하']
+const BUDGETS = [
+  { k: '전체', label: '전체', max: Infinity },
+  { k: '6천원 이하', label: '~6,000원', max: 6000 },
+  { k: '8천원 이하', label: '~8,000원', max: 8000 },
+  { k: '1만원 이하', label: '~10,000원', max: 10000 },
+]
+const SORTS = [
+  { k: 'distance', label: '거리순' },
+  { k: 'rating', label: '별점순' },
+  { k: 'price', label: '가격순' },
+]
 
 const busyColor = (b) => b === '여유' ? { color: '#5BD06A', bg: 'rgba(91,208,106,0.12)' } : b === '보통' ? { color: '#FFB261', bg: 'rgba(255,178,97,0.12)' } : { color: '#FF6B6B', bg: 'rgba(255,107,107,0.12)' }
 
@@ -30,14 +40,31 @@ export default function Home() {
   const go = useNavigate()
   const [cat, setCat] = useState('전체')
   const [budget, setBudget] = useState('전체')
+  const [sort, setSort] = useState('distance')
   const [query, setQuery] = useState('')
+  const [showSort, setShowSort] = useState(false)
+
+  const catCounts = useMemo(() => {
+    const counts = {}
+    CATS.forEach(c => {
+      counts[c.k] = c.k === '전체' ? RESTAURANTS.length : RESTAURANTS.filter(r => r.category === c.k).length
+    })
+    return counts
+  }, [])
+
+  const budgetCounts = useMemo(() => {
+    const counts = {}
+    BUDGETS.forEach(b => {
+      counts[b.k] = b.max === Infinity ? RESTAURANTS.length : RESTAURANTS.filter(r => r.priceMin <= b.max).length
+    })
+    return counts
+  }, [])
 
   const filtered = useMemo(() => {
     let list = [...RESTAURANTS]
     if (cat !== '전체') list = list.filter(r => r.category === cat)
-    if (budget === '6천원 이하') list = list.filter(r => r.priceMin <= 6000)
-    else if (budget === '8천원 이하') list = list.filter(r => r.priceMin <= 8000)
-    else if (budget === '1만원 이하') list = list.filter(r => r.priceMin <= 10000)
+    const budgetObj = BUDGETS.find(b => b.k === budget)
+    if (budgetObj && budgetObj.max !== Infinity) list = list.filter(r => r.priceMin <= budgetObj.max)
     if (query.trim()) {
       const q = query.trim().toLowerCase()
       list = list.filter(r =>
@@ -46,9 +73,13 @@ export default function Home() {
         r.tag.toLowerCase().includes(q)
       )
     }
-    return list.sort((a, b) => a.distance - b.distance)
-  }, [cat, budget, query])
+    if (sort === 'distance') return list.sort((a, b) => a.distance - b.distance)
+    if (sort === 'rating') return list.sort((a, b) => b.rating - a.rating)
+    if (sort === 'price') return list.sort((a, b) => a.priceMin - b.priceMin)
+    return list
+  }, [cat, budget, sort, query])
 
+  const hasFilter = cat !== '전체' || budget !== '전체'
   const todayPick = RESTAURANTS[0]
 
   return (
@@ -80,7 +111,7 @@ export default function Home() {
         </div>
 
         {/* Banner */}
-        {!query && (
+        {!query && cat === '전체' && budget === '전체' && (
           <div style={{ padding: '18px 20px 0' }}>
             <div onClick={() => go(`/restaurant/${todayPick.id}`)} style={{ position: 'relative', borderRadius: 22, overflow: 'hidden', background: 'linear-gradient(135deg, #FF8904 0%, #FB2C36 100%)', padding: '20px 18px', minHeight: 148, cursor: 'pointer' }}>
               <div style={{ position: 'absolute', right: -10, bottom: -8, width: 130, height: 148 }}>
@@ -97,32 +128,79 @@ export default function Home() {
         <div style={{ padding: '22px 0 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', marginBottom: 12 }}>
             <div style={{ fontSize: 15, fontWeight: 700 }}>카테고리</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }} onClick={() => setCat('전체')}>전체보기</div>
+            {cat !== '전체' && (
+              <button onClick={() => setCat('전체')} style={{ fontSize: 12, color: '#FF8904', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>전체보기</button>
+            )}
           </div>
           <div style={{ display: 'flex', gap: 10, overflowX: 'auto', padding: '0 20px', scrollbarWidth: 'none' }}>
-            {CATS.map(c => (
-              <button key={c.k} onClick={() => setCat(c.k)} style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                <div style={{ width: 54, height: 54, borderRadius: 16, background: cat === c.k ? 'linear-gradient(135deg, #FF8904, #FB2C36)' : '#1A1614', border: cat === c.k ? 'none' : '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, boxShadow: cat === c.k ? '0 6px 16px rgba(251,44,54,0.35)' : 'none', transition: 'all 0.15s' }}>{c.icon}</div>
-                <span style={{ fontSize: 11, fontWeight: cat === c.k ? 700 : 500, color: cat === c.k ? '#fff' : 'rgba(255,255,255,0.6)' }}>{c.k}</span>
-              </button>
-            ))}
+            {CATS.map(c => {
+              const isActive = cat === c.k
+              return (
+                <button key={c.k} onClick={() => setCat(c.k)} style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                  <div style={{ position: 'relative', width: 54, height: 54, borderRadius: 16, background: isActive ? 'linear-gradient(135deg, #FF8904, #FB2C36)' : '#1A1614', border: isActive ? 'none' : '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, boxShadow: isActive ? '0 6px 16px rgba(251,44,54,0.35)' : 'none', transition: 'all 0.15s' }}>
+                    {c.icon}
+                    {catCounts[c.k] > 0 && (
+                      <div style={{ position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, borderRadius: 999, background: isActive ? '#fff' : '#FF8904', color: isActive ? '#FB2C36' : '#fff', fontSize: 9, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px' }}>
+                        {catCounts[c.k]}
+                      </div>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: isActive ? 700 : 500, color: isActive ? '#fff' : 'rgba(255,255,255,0.6)' }}>{c.k}</span>
+                </button>
+              )
+            })}
           </div>
         </div>
 
         {/* Budget */}
         <div style={{ marginTop: 16, padding: '0 20px', display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {BUDGETS.map(b => (
-            <button key={b} onClick={() => setBudget(b)} style={{ flex: '0 0 auto', padding: '8px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, background: budget === b ? '#FF8904' : 'transparent', border: budget === b ? '1px solid #FF8904' : '1px solid rgba(255,255,255,0.10)', color: budget === b ? '#fff' : 'rgba(255,255,255,0.7)', cursor: 'pointer', transition: 'all 0.15s' }}>💰 {b}</button>
-          ))}
+          {BUDGETS.map(b => {
+            const isActive = budget === b.k
+            return (
+              <button key={b.k} onClick={() => setBudget(b.k)} style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 14px', borderRadius: 12, fontSize: 12, fontWeight: 600, background: isActive ? 'rgba(255,137,4,0.15)' : 'transparent', border: isActive ? '1.5px solid #FF8904' : '1px solid rgba(255,255,255,0.10)', color: isActive ? '#FF8904' : 'rgba(255,255,255,0.7)', cursor: 'pointer', transition: 'all 0.15s', gap: 2 }}>
+                <span style={{ fontWeight: 700 }}>💰 {b.k}</span>
+                <span style={{ fontSize: 10, color: isActive ? 'rgba(255,137,4,0.7)' : 'rgba(255,255,255,0.35)' }}>
+                  {b.max === Infinity ? `전체 ${budgetCounts[b.k]}곳` : `${budgetCounts[b.k]}곳`}
+                </span>
+              </button>
+            )
+          })}
         </div>
 
-        {/* Nearby list */}
-        <div style={{ marginTop: 24, padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Active filter summary */}
+        {hasFilter && (
+          <div style={{ margin: '12px 20px 0', padding: '10px 14px', borderRadius: 12, background: 'rgba(255,137,4,0.08)', border: '1px solid rgba(255,137,4,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>필터:</span>
+              {cat !== '전체' && <span style={{ fontSize: 11, fontWeight: 700, color: '#FF8904', background: 'rgba(255,137,4,0.15)', padding: '2px 8px', borderRadius: 999 }}>{cat}</span>}
+              {budget !== '전체' && <span style={{ fontSize: 11, fontWeight: 700, color: '#FF8904', background: 'rgba(255,137,4,0.15)', padding: '2px 8px', borderRadius: 999 }}>{budget}</span>}
+            </div>
+            <button onClick={() => { setCat('전체'); setBudget('전체') }} style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0, flexShrink: 0 }}>전체 초기화</button>
+          </div>
+        )}
+
+        {/* List header */}
+        <div style={{ marginTop: 20, padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: -0.3 }}>지금 가까운 맛집 <span style={{ fontSize: 14, color: '#FF8904' }}>{filtered.length}곳</span></div>
+            <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: -0.3 }}>
+              {cat !== '전체' ? cat : '가까운 맛집'} <span style={{ fontSize: 14, color: '#FF8904' }}>{filtered.length}곳</span>
+            </div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>경일대 정문 500m 이내</div>
           </div>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>거리순 ▾</span>
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => setShowSort(v => !v)} style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }}>
+              {SORTS.find(s => s.k === sort)?.label} ▾
+            </button>
+            {showSort && (
+              <div style={{ position: 'absolute', right: 0, top: 36, background: '#1A1614', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, overflow: 'hidden', zIndex: 50, minWidth: 100, boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
+                {SORTS.map(s => (
+                  <button key={s.k} onClick={() => { setSort(s.k); setShowSort(false) }} style={{ display: 'block', width: '100%', padding: '11px 16px', textAlign: 'left', fontSize: 13, fontWeight: sort === s.k ? 700 : 500, color: sort === s.k ? '#FF8904' : '#fff', background: sort === s.k ? 'rgba(255,137,4,0.1)' : 'none', border: 'none', cursor: 'pointer' }}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div style={{ padding: '12px 20px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -130,6 +208,11 @@ export default function Home() {
             <div style={{ padding: '40px 0', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>🍽️</div>
               검색 결과가 없어요
+              {hasFilter && (
+                <div style={{ marginTop: 10 }}>
+                  <button onClick={() => { setCat('전체'); setBudget('전체') }} style={{ fontSize: 13, color: '#FF8904', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>필터 초기화</button>
+                </div>
+              )}
             </div>
           )}
           {filtered.map(r => {
