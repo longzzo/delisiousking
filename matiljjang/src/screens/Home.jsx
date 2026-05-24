@@ -141,7 +141,7 @@ export default function Home() {
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>📍 경일대 본관 앞</div>
               <div style={{ marginTop: 4, fontSize: 22, fontWeight: 800, letterSpacing: -0.3 }}>오늘 뭐 먹지? <span style={{ color: '#FF8904' }}>🍴</span></div>
             </div>
-            <div style={{ width: 40, height: 40, borderRadius: 14, background: 'linear-gradient(135deg, #FF8904, #FB2C36)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, boxShadow: '0 8px 20px rgba(251,44,54,0.35)' }}>김</div>
+            <button onClick={() => go('/my')} style={{ width: 40, height: 40, borderRadius: 14, background: 'linear-gradient(135deg, #FF8904, #FB2C36)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, boxShadow: '0 8px 20px rgba(251,44,54,0.35)', border: 'none', color: '#fff', cursor: 'pointer' }}>김</button>
           </div>
           <div style={{ marginTop: 14, height: 50, borderRadius: 16, background: '#1A1614', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', padding: '0 16px', gap: 10 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="rgba(255,255,255,0.45)" strokeWidth="2"/><path d="M20 20l-3.5-3.5" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round"/></svg>

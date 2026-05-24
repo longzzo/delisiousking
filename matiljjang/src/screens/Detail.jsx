@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { RESTAURANTS } from '../data/restaurants'
 import { useApp } from '../store/AppStore'
@@ -12,6 +13,12 @@ export default function Detail() {
   const go = useNavigate()
   const { id } = useParams()
   const { toggleWishlist, isWished, getReviews } = useApp()
+  const [toast, setToast] = useState('')
+
+  const showToast = (msg) => {
+    setToast(msg)
+    setTimeout(() => setToast(''), 1800)
+  }
 
   const restaurant = RESTAURANTS.find(r => r.id === Number(id))
 
@@ -37,6 +44,34 @@ export default function Detail() {
     window.open(`https://map.kakao.com/?q=${encodeURIComponent(restaurant.address)}`, '_blank')
   }
 
+  const copyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(restaurant.address)
+      showToast('주소가 복사되었어요')
+    } catch {
+      showToast('복사 실패')
+    }
+  }
+
+  const share = async () => {
+    const url = window.location.href
+    const text = `${restaurant.name} · ⭐${restaurant.rating} · ${restaurant.category}`
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: restaurant.name, text, url })
+      } catch {
+        // user cancelled
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url)
+        showToast('링크가 복사되었어요')
+      } catch {
+        showToast('공유 실패')
+      }
+    }
+  }
+
   return (
     <div style={{ width: '100%', height: '100dvh', background: '#0E0B09', position: 'relative', color: '#fff', overflow: 'hidden' }}>
       <div className="screen-wrap" style={{ paddingBottom: 96 }}>
@@ -51,7 +86,7 @@ export default function Detail() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(12px)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <button onClick={share} style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(12px)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 12v8a1 1 0 001 1h14a1 1 0 001-1v-8M16 6l-4-4-4 4M12 2v13" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
               <button
@@ -86,7 +121,7 @@ export default function Detail() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ width: 20 }}>📍</span>
               <span style={{ color: 'rgba(255,255,255,0.85)', flex: 1 }}>{restaurant.address} · 도보 {Math.ceil(restaurant.distance/80)}분</span>
-              <span style={{ color: '#FF8904', fontSize: 12, fontWeight: 700 }}>복사</span>
+              <button onClick={copyAddress} style={{ color: '#FF8904', fontSize: 12, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px' }}>복사</button>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ width: 20 }}>🕒</span>
@@ -217,6 +252,12 @@ export default function Detail() {
         </button>
         <button onClick={() => go(`/review/${restaurant.id}`)} style={{ flex: 1.4, height: 52, borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #FF8904, #FB2C36)', color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 24px rgba(251,44,54,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>✍️ 리뷰 쓰기</button>
       </div>
+
+      {toast && (
+        <div style={{ position: 'absolute', bottom: 96, left: '50%', transform: 'translateX(-50%)', background: 'rgba(13,11,9,0.95)', backdropFilter: 'blur(12px)', color: '#fff', fontSize: 13, fontWeight: 600, padding: '12px 22px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', zIndex: 200, animation: 'toast 1.8s ease-out forwards', whiteSpace: 'nowrap' }}>
+          {toast}
+        </div>
+      )}
     </div>
   )
 }

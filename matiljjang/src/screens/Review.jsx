@@ -57,7 +57,10 @@ export default function Review() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M6 18L18 6" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
         </button>
         <span style={{ fontSize: 16, fontWeight: 700 }}>리뷰 작성</span>
-        <button style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer' }}>임시저장</button>
+        <button
+          onClick={() => alert('임시저장 기능은 준비 중이에요')}
+          style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer' }}
+        >임시저장</button>
       </div>
 
       <div className="screen-wrap" style={{ paddingTop: 108, paddingBottom: 100 }}>
@@ -68,7 +71,10 @@ export default function Review() {
             <div style={{ fontSize: 14, fontWeight: 800 }}>{restaurant.name}</div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{restaurant.category} · 도보 {Math.ceil(restaurant.distance/80)}분</div>
           </div>
-          <span style={{ fontSize: 12, color: '#FF8904', fontWeight: 700 }}>변경</span>
+          <button
+            onClick={() => go('/home')}
+            style={{ fontSize: 12, color: '#FF8904', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
+          >변경</button>
         </div>
 
         {/* Overall rating */}

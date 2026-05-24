@@ -65,20 +65,20 @@ export default function Map() {
       </div>
 
       {/* Search bar */}
-      <div style={{ position: 'absolute', top: 52, left: 16, right: 16, display: 'flex', gap: 8 }}>
-        <div style={{ flex: 1, height: 46, borderRadius: 14, background: 'rgba(20,16,14,0.88)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', padding: '0 14px', gap: 10 }}>
+      <div style={{ position: 'absolute', top: 52, left: 16, right: 16, display: 'flex', gap: 8, zIndex: 15 }}>
+        <button onClick={() => go('/home')} style={{ flex: 1, height: 46, borderRadius: 14, background: 'rgba(20,16,14,0.88)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', padding: '0 14px', gap: 10, cursor: 'pointer', textAlign: 'left' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#fff" strokeWidth="2"/><path d="M20 20l-3.5-3.5" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
           <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>이 지역에서 검색</span>
-        </div>
-        <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(20,16,14,0.88)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        </button>
+        <button onClick={() => go('/home')} style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(20,16,14,0.88)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 12h10M10 18h4" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
-        </div>
+        </button>
       </div>
 
-      {/* Filter chips */}
-      <div style={{ position: 'absolute', top: 110, left: 0, right: 0, display: 'flex', gap: 8, padding: '0 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+      {/* Filter chips (visual only — full filtering on Home) */}
+      <div style={{ position: 'absolute', top: 110, left: 0, right: 0, display: 'flex', gap: 8, padding: '0 16px', overflowX: 'auto', scrollbarWidth: 'none', zIndex: 15 }}>
         {[{ label: '⭐ 4.5+', on: true }, { label: '🪑 혼밥 가능', on: false }, { label: '⏱ 빠른 조리', on: false }, { label: '💰 8천원 이하', on: true }, { label: '🟢 한산', on: false }].map((c, i) => (
-          <div key={i} style={{ flex: '0 0 auto', padding: '7px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', background: c.on ? '#FF8904' : 'rgba(20,16,14,0.88)', border: c.on ? '1px solid #FF8904' : '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)', color: '#fff', cursor: 'pointer' }}>{c.label}</div>
+          <button key={i} onClick={() => go('/home')} style={{ flex: '0 0 auto', padding: '7px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', background: c.on ? '#FF8904' : 'rgba(20,16,14,0.88)', border: c.on ? '1px solid #FF8904' : '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)', color: '#fff', cursor: 'pointer' }}>{c.label}</button>
         ))}
       </div>
 
