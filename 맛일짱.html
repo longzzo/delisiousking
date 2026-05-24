@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>맛일짱 · 경일대 학생 맛집 앱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Black+Han+Sans&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #1a1715; }
+  * { -webkit-font-smoothing: antialiased; }
+  @keyframes caret { 50% { opacity: 0; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop {
+    0%   { transform: scale(0.6) rotate(-8deg); opacity: 0; }
+    60%  { transform: scale(1.08) rotate(3deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  body { word-break: keep-all; }
+  button { white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+<script type="text/babel" data-presets="env,react">
+/* ── GalaxyFrame ── */
+function GalaxyFrame({ children, width = 412, height = 916, color = 'titanium' }) {
+  const palettes = {
+    titanium: { body: 'linear-gradient(140deg, #4a4d52 0%, #2c2e31 55%, #1c1d20 100%)', ring: '#2a2c2f' },
+    silverblue: { body: 'linear-gradient(140deg, #5e6a78 0%, #34404c 55%, #1f262e 100%)', ring: '#2a3340' },
+    black: { body: 'linear-gradient(140deg, #2a2a2c 0%, #16161a 100%)', ring: '#101013' },
+  };
+  const p = palettes[color] || palettes.titanium;
+  const bezel = 10;
+  return (
+    <div style={{
+      width: width + bezel * 2, height: height + bezel * 2,
+      borderRadius: 52, padding: bezel, boxSizing: 'border-box',
+      background: p.body,
+      boxShadow: `0 50px 80px rgba(0,0,0,0.28), 0 0 0 1px ${p.ring}, inset 0 0 0 1px rgba(255,255,255,0.06)`,
+      position: 'relative',
+    }}>
+      <div style={{ position: 'absolute', right: -1.5, top: 180, width: 2, height: 78, background: '#1a1a1d', borderRadius: 2 }} />
+      <div style={{ position: 'absolute', left: -1.5, top: 220, width: 2, height: 56, background: '#1a1a1d', borderRadius: 2 }} />
+      <div style={{ position: 'absolute', left: -1.5, top: 290, width: 2, height: 96, background: '#1a1a1d', borderRadius: 2 }} />
+      <div style={{ width, height, borderRadius: 44, overflow: 'hidden', position: 'relative', background: '#000' }}>
+        <div style={{
+          position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)',
+          width: 12, height: 12, borderRadius: '50%', background: '#000',
+          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08), 0 0 0 1px rgba(0,0,0,0.4)',
+          zIndex: 100,
+        }} />
+        <SamsungStatusBar />
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function SamsungStatusBar() {
+  return (
+    <div style={{
+      position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50,
+      height: 38, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      padding: '8px 22px 0',
+      fontFamily: '"Inter", system-ui', color: '#fff', fontSize: 13, fontWeight: 600, pointerEvents: 'none',
+    }}>
+      <span style={{ letterSpacing: 0.2 }}>9:41</span>
+      <div style={{ flex: 1 }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+          <rect x="0" y="9" width="2.5" height="3" rx="0.5" fill="#fff"/>
+          <rect x="4" y="6.5" width="2.5" height="5.5" rx="0.5" fill="#fff"/>
+          <rect x="8" y="3.5" width="2.5" height="8.5" rx="0.5" fill="#fff"/>
+          <rect x="12" y="0.5" width="2.5" height="11.5" rx="0.5" fill="#fff"/>
+        </svg>
+        <svg width="15" height="11" viewBox="0 0 15 11" fill="none">
+          <path d="M7.5 2C10.4 2 13 3.1 14.8 4.9L13.4 6.3C11.9 4.8 9.8 3.9 7.5 3.9C5.2 3.9 3.1 4.8 1.6 6.3L0.2 4.9C2 3.1 4.6 2 7.5 2Z" fill="#fff"/>
+          <path d="M7.5 5.3C9.2 5.3 10.7 6 11.8 7.1L10.4 8.5C9.6 7.7 8.6 7.2 7.5 7.2C6.4 7.2 5.4 7.7 4.6 8.5L3.2 7.1C4.3 6 5.8 5.3 7.5 5.3Z" fill="#fff"/>
+          <circle cx="7.5" cy="9.7" r="1.3" fill="#fff"/>
+        </svg>
+        <div style={{ width: 24, height: 12, borderRadius: 3, border: '1.2px solid rgba(255,255,255,0.95)', position: 'relative', display: 'flex', alignItems: 'center', padding: 1.5 }}>
+          <div style={{ width: '78%', height: '100%', background: '#fff', borderRadius: 1.5 }} />
+          <div style={{ position: 'absolute', right: -3, top: '50%', transform: 'translateY(-50%)', width: 2, height: 5, background: 'rgba(255,255,255,0.95)', borderRadius: 1 }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── NavCtx ── */
+const NavCtx = React.createContext({ go: () => {}, current: 'login' });
+function useNav() { return React.useContext(NavCtx); }
+
+/* ── LoginScreen ── */
+function LoginScreen() {
+  const nav = useNav();
+  const goHome = () => nav.go('home');
+  return (
+    <div style={{
+      width: '100%', height: '100%',
+      background: 'linear-gradient(160deg, #FF8904 0%, #FB2C36 100%)',
+      position: 'relative', overflow: 'hidden',
+      fontFamily: '"Inter", -apple-system, system-ui, sans-serif', color: '#fff',
+    }}>
+      <div style={{ position: 'absolute', top: -80, right: -60, width: 260, height: 260, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', filter: 'blur(4px)' }} />
+      <div style={{ position: 'absolute', bottom: 220, left: -80, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', filter: 'blur(4px)' }} />
+      <div style={{ position: 'absolute', top: 76, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <img src="project/assets/mascot-hero.png" alt="킹짱이" style={{ width: 220, height: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 14px 22px rgba(120,20,0,0.28))' }} />
+        <div style={{ marginTop: 18, whiteSpace: 'nowrap', fontFamily: '"Black Han Sans", sans-serif', fontWeight: 800, fontSize: 60, letterSpacing: -1, lineHeight: 1, textShadow: '0 4px 0 rgba(0,0,0,0.10), 0 8px 24px rgba(0,0,0,0.18)', display: 'inline-block' }}>
+          <span style={{ display: 'inline-block', transform: 'rotate(-6deg) translateY(-2px)', marginRight: 2 }}>맛</span>
+          <span style={{ display: 'inline-block' }}>일짱</span>
+        </div>
+        <div style={{ marginTop: 14, fontSize: 15, fontWeight: 500, whiteSpace: 'nowrap', color: 'rgba(255,255,255,0.92)', letterSpacing: 0.2 }}>너의 점심, 내가 책임질게 🍚</div>
+      </div>
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, background: '#13100E', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: '28px 24px 38px', boxShadow: '0 -20px 40px rgba(0,0,0,0.20)' }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 12 }}>경일대 학생 전용 · 1초 로그인</div>
+        <button onClick={goHome} style={{ width: '100%', height: 54, borderRadius: 14, border: 'none', background: '#FEE500', color: '#191600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 16, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><ellipse cx="10" cy="9" rx="9" ry="7.5" fill="#191600"/><path d="M7 13.5L5.5 17l4-2.2" fill="#191600"/></svg>
+          카카오로 시작하기
+        </button>
+        <button onClick={goHome} style={{ marginTop: 10, width: '100%', height: 54, borderRadius: 14, border: '1px solid rgba(255,255,255,0.10)', background: '#1F1A17', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 16, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer' }}>
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#4285F4" d="M45 24.5c0-1.5-.1-3-.4-4.4H24v8.4h11.8c-.5 2.7-2 5-4.3 6.6v5.5h7c4.1-3.8 6.5-9.4 6.5-16.1z"/>
+            <path fill="#34A853" d="M24 46c5.8 0 10.6-1.9 14.2-5.2l-7-5.5c-1.9 1.3-4.4 2.1-7.2 2.1-5.5 0-10.2-3.7-11.9-8.8H4.9v5.6C8.5 41.4 15.7 46 24 46z"/>
+            <path fill="#FBBC05" d="M12.1 28.6c-.5-1.3-.7-2.6-.7-4.1s.3-2.8.7-4.1V14.9H4.9C3.7 17.6 3 20.7 3 24s.7 6.4 1.9 9.1l7.2-5.6z"/>
+            <path fill="#EA4335" d="M24 10.8c3.1 0 5.9 1.1 8.1 3.2l6-6C34.6 4.5 29.8 2 24 2 15.7 2 8.5 6.6 4.9 14.9l7.2 5.6c1.7-5.1 6.4-8.8 11.9-8.8z"/>
+          </svg>
+          Google로 시작하기
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0 14px', color: 'rgba(255,255,255,0.35)', fontSize: 12, fontWeight: 500 }}>
+          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />또는<div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+        </div>
+        <button onClick={goHome} style={{ width: '100%', height: 50, borderRadius: 14, background: 'rgba(255,137,4,0.12)', border: '1px solid rgba(255,137,4,0.35)', color: '#FFB261', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit', cursor: 'pointer' }}>
+          <span style={{ width: 18, height: 18, borderRadius: 5, background: '#FF8904', color: '#fff', fontSize: 11, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>K</span>
+          경일대 학생 인증으로 시작하기
+        </button>
+        <div style={{ marginTop: 18, textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>
+          가입 시 <span style={{ color: '#FFB261', textDecoration: 'underline' }}>이용약관</span> 및 <span style={{ color: '#FFB261', textDecoration: 'underline' }}>개인정보처리방침</span>에 동의합니다.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── TabBar ── */
+function TabBar({ active = 'home' }) {
+  const nav = useNav();
+  const tabs = [
+    { id: 'home', label: '홈', icon: '🏠', target: 'home' },
+    { id: 'map', label: '지도', icon: '🗺️', target: 'map' },
+    { id: 'wish', label: '위시', icon: '❤️', target: 'home' },
+    { id: 'review', label: '리뷰', icon: '✍️', target: 'home' },
+    { id: 'my', label: '마이', icon: '👤', target: 'home' },
+  ];
+  return (
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, background: 'rgba(13,11,9,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '10px 8px 26px', display: 'flex', justifyContent: 'space-around' }}>
+      {tabs.map(t => (
+        <div key={t.id} onClick={() => nav.go(t.target)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+          <div style={{ fontSize: 20, opacity: active === t.id ? 1 : 0.45, filter: active === t.id ? 'none' : 'grayscale(0.6)' }}>{t.icon}</div>
+          <div style={{ fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap', color: active === t.id ? '#FF8904' : 'rgba(255,255,255,0.5)' }}>{t.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── HomeScreen ── */
+function HomeScreen({ active = 'home' }) {
+  const nav = useNav();
+  const [cat, setCat] = React.useState('전체');
+  const [budget, setBudget] = React.useState('8천원 이하');
+  const cats = [
+    { k: '전체', icon: '🍽️' }, { k: '한식', icon: '🍚' }, { k: '중식', icon: '🥟' },
+    { k: '일식', icon: '🍣' }, { k: '분식', icon: '🍢' }, { k: '카페', icon: '☕' }, { k: '치킨', icon: '🍗' },
+  ];
+  const budgets = ['전체', '6천원 이하', '8천원 이하', '1만원 이하'];
+  const nearby = [
+    { name: '진성식당', cat: '한식 · 백반', dist: 80, price: '7,000원~', rating: 4.8, reviews: 326, busy: '여유', solo: true, tag: '가성비 갑' },
+    { name: '캠퍼스 김밥천국', cat: '분식', dist: 120, price: '4,500원~', rating: 4.6, reviews: 512, busy: '보통', solo: true, tag: '혼밥 OK' },
+    { name: '하카타 라멘', cat: '일식 · 라멘', dist: 240, price: '9,000원~', rating: 4.7, reviews: 188, busy: '혼잡', solo: false, tag: '조리 5분' },
+  ];
+  return (
+    <div style={{ width: '100%', height: '100%', background: '#0E0B09', fontFamily: '"Inter", -apple-system, system-ui, sans-serif', color: '#fff', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ height: '100%', overflowY: 'auto', paddingBottom: 100 }}>
+        <div style={{ padding: '68px 20px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>📍 경일대 본관 앞</div>
+              <div style={{ marginTop: 4, fontSize: 22, fontWeight: 800, letterSpacing: -0.3, whiteSpace: 'nowrap' }}>오늘 뭐 먹지? <span style={{ color: '#FF8904' }}>🍴</span></div>
+            </div>
+            <div style={{ width: 40, height: 40, borderRadius: 14, background: 'linear-gradient(135deg, #FF8904, #FB2C36)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, color: '#fff', boxShadow: '0 8px 20px rgba(251,44,54,0.35)' }}>김</div>
+          </div>
+          <div style={{ marginTop: 16, height: 50, borderRadius: 16, background: '#1A1614', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', padding: '0 16px', gap: 10 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="rgba(255,255,255,0.5)" strokeWidth="2"/><path d="M20 20l-3.5-3.5" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round"/></svg>
+            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 15, whiteSpace: 'nowrap' }}>가게 · 메뉴 검색</span>
+          </div>
+        </div>
+        <div style={{ padding: '20px 20px 0' }}>
+          <div onClick={() => nav.go('detail')} style={{ position: 'relative', borderRadius: 22, overflow: 'hidden', background: 'linear-gradient(135deg, #FF8904 0%, #FB2C36 100%)', padding: '20px 18px', minHeight: 152, cursor: 'pointer' }}>
+            <div style={{ position: 'absolute', right: -16, bottom: -8, width: 138, height: 158 }}>
+              <img src="project/assets/mascot-hero.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 8px 14px rgba(0,0,0,0.25))' }} />
+            </div>
+            <div style={{ display: 'inline-block', padding: '5px 10px', borderRadius: 999, background: 'rgba(0,0,0,0.18)', color: '#fff', fontSize: 11, fontWeight: 700, letterSpacing: 0.4 }}>TODAY'S PICK · 11/24</div>
+            <div style={{ marginTop: 12, fontSize: 22, fontWeight: 800, lineHeight: 1.25, maxWidth: 210, letterSpacing: -0.3 }}>오늘 점심은<br/><span style={{ background: 'rgba(255,255,255,0.95)', color: '#FB2C36', padding: '2px 8px', borderRadius: 6 }}>진성식당</span> 어때?</div>
+            <div style={{ marginTop: 8, fontSize: 12, color: 'rgba(255,255,255,0.92)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500 }}>⭐ 4.8 · 도보 1분 · 7,000원~</div>
+          </div>
+        </div>
+        <div style={{ padding: '24px 0 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', marginBottom: 12 }}>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>카테고리</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>전체보기</div>
+          </div>
+          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', padding: '0 20px' }}>
+            {cats.map(c => (
+              <div key={c.k} onClick={() => setCat(c.k)} style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                <div style={{ width: 54, height: 54, borderRadius: 16, background: cat === c.k ? 'linear-gradient(135deg, #FF8904, #FB2C36)' : '#1A1614', border: cat === c.k ? 'none' : '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, boxShadow: cat === c.k ? '0 6px 16px rgba(251,44,54,0.35)' : 'none' }}>{c.icon}</div>
+                <div style={{ fontSize: 11, fontWeight: cat === c.k ? 700 : 500, color: cat === c.k ? '#fff' : 'rgba(255,255,255,0.6)' }}>{c.k}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ marginTop: 18, padding: '0 20px', display: 'flex', gap: 8, overflowX: 'auto' }}>
+          {budgets.map(b => (
+            <div key={b} onClick={() => setBudget(b)} style={{ flex: '0 0 auto', padding: '8px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', background: budget === b ? '#FF8904' : 'transparent', border: budget === b ? '1px solid #FF8904' : '1px solid rgba(255,255,255,0.10)', color: budget === b ? '#fff' : 'rgba(255,255,255,0.7)', cursor: 'pointer' }}>💰 {b}</div>
+          ))}
+        </div>
+        <div style={{ marginTop: 24, padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: -0.3, whiteSpace: 'nowrap' }}>지금 가까운 맛집</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2, whiteSpace: 'nowrap' }}>경일대 정문 500m 이내</div>
+          </div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>거리순 ▾</div>
+        </div>
+        <div style={{ padding: '14px 20px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {nearby.map((r, i) => (
+            <div key={i} onClick={() => nav.go('detail')} style={{ background: '#1A1614', borderRadius: 18, padding: 12, cursor: 'pointer', display: 'flex', gap: 12, border: '1px solid rgba(255,255,255,0.04)' }}>
+              <div style={{ width: 80, height: 80, borderRadius: 12, flexShrink: 0, background: `repeating-linear-gradient(135deg, #2A211B 0 6px, #221B17 6px 12px)`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                <div style={{ fontSize: 28 }}>{['🍲', '🥢', '🍜'][i]}</div>
+                <div style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(0,0,0,0.6)', color: '#FFB261', fontSize: 9, fontWeight: 700, padding: '3px 6px', borderRadius: 6 }}>{r.tag}</div>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: -0.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 999, whiteSpace: 'nowrap', flexShrink: 0, color: r.busy === '여유' ? '#5BD06A' : r.busy === '보통' ? '#FFB261' : '#FF6B6B', background: r.busy === '여유' ? 'rgba(91,208,106,0.12)' : r.busy === '보통' ? 'rgba(255,178,97,0.12)' : 'rgba(255,107,107,0.12)' }}>● {r.busy}</div>
+                </div>
+                <div style={{ marginTop: 3, fontSize: 12, color: 'rgba(255,255,255,0.55)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.cat} · 도보 {Math.ceil(r.dist/80)}분 ({r.dist}m)</div>
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
+                  <span style={{ color: '#FFD56B', fontWeight: 700 }}>★ {r.rating}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.35)' }}>·</span>
+                  <span style={{ color: 'rgba(255,255,255,0.55)' }}>리뷰 {r.reviews}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.35)' }}>·</span>
+                  <span style={{ color: '#fff', fontWeight: 700 }}>{r.price}</span>
+                </div>
+                <div style={{ marginTop: 8, display: 'flex', gap: 4 }}>
+                  {r.solo && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 7px', borderRadius: 6, background: 'rgba(91,208,106,0.10)', color: '#5BD06A' }}>🪑 1인석</span>}
+                  <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 7px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.7)' }}>⏱ {[5,8,12][i]}분</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <TabBar active={active} />
+    </div>
+  );
+}
+
+/* ── MapScreen ── */
+function MapScreen() {
+  const nav = useNav();
+  const [selected, setSelected] = React.useState(0);
+  const markers = [
+    { x: 120, y: 240, rating: 4.8, name: '진성식당', cat: '한식 · 백반', price: '7,000원~', busy: '여유', dist: '80m', emoji: '🍲' },
+    { x: 200, y: 180, rating: 4.6, name: '캠퍼스 김밥천국', cat: '분식', price: '4,500원~', busy: '보통', dist: '120m', emoji: '🍙' },
+    { x: 92, y: 360, rating: 4.7, name: '하카타 라멘', cat: '일식 · 라멘', price: '9,000원~', busy: '혼잡', dist: '240m', emoji: '🍜' },
+    { x: 240, y: 320, rating: 4.3, name: '교촌치킨', cat: '치킨', price: '9,500원~', busy: '여유', dist: '300m', emoji: '🍗' },
+    { x: 170, y: 420, rating: 3.9, name: '왕만두집', cat: '중식', price: '5,000원~', busy: '보통', dist: '180m', emoji: '🥟' },
+  ];
+  const sel = markers[selected];
+  const ratingColor = (r) => r >= 4.5 ? '#FF8904' : r >= 4.0 ? '#FFB261' : '#9CA3AF';
+  return (
+    <div style={{ width: '100%', height: '100%', background: '#0E0B09', position: 'relative', fontFamily: '"Inter", -apple-system, system-ui, sans-serif', color: '#fff', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', inset: 0, background: '#15110E' }}>
+        <svg width="100%" height="100%" viewBox="0 0 360 700" preserveAspectRatio="xMidYMid slice">
+          <rect width="360" height="700" fill="#15110E"/>
+          <defs><pattern id="mgrid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0L0 0 0 40" stroke="rgba(255,255,255,0.025)" fill="none" strokeWidth="1"/></pattern></defs>
+          <rect width="360" height="700" fill="url(#mgrid)"/>
+          <path d="M-20 280 L380 200" stroke="rgba(255,255,255,0.06)" strokeWidth="22"/>
+          <path d="M-20 280 L380 200" stroke="rgba(255,255,255,0.10)" strokeWidth="2" strokeDasharray="6 6"/>
+          <path d="M170 -20 L210 720" stroke="rgba(255,255,255,0.06)" strokeWidth="22"/>
+          <path d="M170 -20 L210 720" stroke="rgba(255,255,255,0.10)" strokeWidth="2" strokeDasharray="6 6"/>
+          <path d="M-20 460 L380 480" stroke="rgba(255,255,255,0.06)" strokeWidth="18"/>
+          <rect x="40" y="60" width="140" height="120" rx="8" fill="rgba(255,137,4,0.06)" stroke="rgba(255,137,4,0.20)" strokeWidth="1"/>
+          <text x="110" y="100" textAnchor="middle" fill="rgba(255,137,4,0.7)" fontSize="11" fontWeight="700" fontFamily="Inter">경일대학교</text>
+          <text x="110" y="118" textAnchor="middle" fill="rgba(255,137,4,0.5)" fontSize="9" fontFamily="Inter">KYUNGIL UNIV.</text>
+          <rect x="55" y="130" width="40" height="34" rx="3" fill="rgba(255,137,4,0.12)"/>
+          <rect x="105" y="130" width="60" height="34" rx="3" fill="rgba(255,137,4,0.12)"/>
+          <rect x="220" y="80" width="100" height="60" rx="6" fill="rgba(91,208,106,0.06)" stroke="rgba(91,208,106,0.18)" strokeWidth="1"/>
+          <text x="270" y="115" textAnchor="middle" fill="rgba(91,208,106,0.7)" fontSize="10" fontWeight="600" fontFamily="Inter">기숙사</text>
+          <circle cx="290" cy="480" r="40" fill="rgba(91,208,106,0.06)" stroke="rgba(91,208,106,0.18)" strokeWidth="1"/>
+          <text x="290" y="484" textAnchor="middle" fill="rgba(91,208,106,0.5)" fontSize="9" fontFamily="Inter">근린공원</text>
+          <rect x="30" y="500" width="40" height="60" rx="4" fill="rgba(255,255,255,0.04)"/>
+          <rect x="80" y="540" width="50" height="50" rx="4" fill="rgba(255,255,255,0.04)"/>
+          <rect x="240" y="580" width="60" height="40" rx="4" fill="rgba(255,255,255,0.04)"/>
+          <circle cx="160" cy="170" r="18" fill="rgba(81,162,255,0.15)">
+            <animate attributeName="r" values="14;22;14" dur="2.5s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.5;0;0.5" dur="2.5s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="160" cy="170" r="7" fill="#51A2FF" stroke="#fff" strokeWidth="2.5"/>
+        </svg>
+      </div>
+      <div style={{ position: 'absolute', top: 58, left: 16, right: 16, display: 'flex', gap: 8 }}>
+        <div style={{ flex: 1, height: 44, borderRadius: 14, background: 'rgba(20,16,14,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', padding: '0 14px', gap: 10 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#fff" strokeWidth="2"/><path d="M20 20l-3.5-3.5" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, whiteSpace: 'nowrap' }}>이 지역에서 검색</span>
+        </div>
+        <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(20,16,14,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 12h10M10 18h4" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+        </div>
+      </div>
+      <div style={{ position: 'absolute', top: 114, left: 0, right: 0, display: 'flex', gap: 8, padding: '0 16px', overflowX: 'auto' }}>
+        {[{ label: '⭐ 4.5+', active: true }, { label: '🪑 혼밥 가능', active: false }, { label: '⏱ 빠른 조리', active: false }, { label: '💰 8천원 이하', active: true }, { label: '🟢 한산', active: false }].map((c, i) => (
+          <div key={i} style={{ flex: '0 0 auto', padding: '7px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', background: c.active ? '#FF8904' : 'rgba(20,16,14,0.85)', border: c.active ? '1px solid #FF8904' : '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', color: '#fff' }}>{c.label}</div>
+        ))}
+      </div>
+      {markers.map((m, i) => (
+        <div key={i} onClick={() => setSelected(i)} style={{ position: 'absolute', left: m.x, top: m.y, transform: 'translate(-50%, -100%)', cursor: 'pointer', zIndex: selected === i ? 10 : 5 }}>
+          <div style={{ width: selected === i ? 44 : 36, height: selected === i ? 44 : 36, borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)', background: ratingColor(m.rating), border: `2px solid ${selected === i ? '#fff' : 'rgba(255,255,255,0.6)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: selected === i ? '0 10px 20px rgba(255,137,4,0.6)' : '0 4px 10px rgba(0,0,0,0.4)', transition: 'all 0.2s' }}>
+            <div style={{ transform: 'rotate(45deg)', fontSize: selected === i ? 20 : 16 }}>{m.emoji}</div>
+          </div>
+          <div style={{ position: 'absolute', top: -4, right: -4, width: 14, height: 14, borderRadius: '50%', background: m.busy === '여유' ? '#5BD06A' : m.busy === '보통' ? '#FFB261' : '#FF6B6B', border: '2px solid #0E0B09' }} />
+        </div>
+      ))}
+      <div onClick={() => nav.go('detail')} style={{ position: 'absolute', bottom: 28, left: 16, right: 16, background: '#1A1614', cursor: 'pointer', borderRadius: 22, padding: 16, border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', display: 'flex', gap: 14 }}>
+        <div style={{ width: 86, height: 86, borderRadius: 14, flexShrink: 0, background: `repeating-linear-gradient(135deg, #2A211B 0 6px, #221B17 6px 12px)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, position: 'relative' }}>
+          {sel.emoji}
+          <div style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(0,0,0,0.55)', color: '#FFD56B', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6 }}>★ {sel.rating}</div>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: -0.2, whiteSpace: 'nowrap' }}>{sel.name}</div>
+            <div style={{ fontSize: 10, fontWeight: 700, padding: '3px 7px', borderRadius: 999, whiteSpace: 'nowrap', flexShrink: 0, color: sel.busy === '여유' ? '#5BD06A' : sel.busy === '보통' ? '#FFB261' : '#FF6B6B', background: sel.busy === '여유' ? 'rgba(91,208,106,0.12)' : sel.busy === '보통' ? 'rgba(255,178,97,0.12)' : 'rgba(255,107,107,0.12)' }}>● {sel.busy}</div>
+          </div>
+          <div style={{ marginTop: 3, fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{sel.cat} · {sel.dist}</div>
+          <div style={{ marginTop: 8, fontSize: 13, fontWeight: 700, color: '#FFB261' }}>{sel.price}</div>
+          <div style={{ marginTop: 10, display: 'flex', gap: 6 }}>
+            <button style={{ flex: 1, height: 34, borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #FF8904, #FB2C36)', color: '#fff', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}>길찾기</button>
+            <button style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: 14, cursor: 'pointer' }}>♡</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── DetailScreen ── */
+function DetailScreen() {
+  const nav = useNav();
+  const menus = [
+    { name: '제육볶음 정식', price: '7,000원', tag: '베스트', desc: '학생 90% 주문' },
+    { name: '김치찌개 정식', price: '7,000원', tag: '', desc: '얼큰한 국물' },
+    { name: '오므라이스', price: '6,500원', tag: '가성비', desc: '계란 듬뿍' },
+    { name: '치즈돈까스', price: '8,500원', tag: '', desc: '' },
+  ];
+  const reviews = [
+    { author: '경영 24학번 김OO', when: '2일 전', rating: 5, photos: 2, tags: ['가성비', '혼밥하기 좋음'], text: '진짜 가성비 갑이에요. 제육볶음 + 된장국 + 반찬 4개에 7천원이면 학식보다 낫습니다. 1인석도 있어서 혼밥 편함.' },
+    { author: '컴공 23학번 박OO', when: '5일 전', rating: 4, photos: 1, tags: ['양 많음', '빠른 조리'], text: '점심시간엔 사람 좀 많은데 5분이면 음식 나옴. 양 많아서 배부르게 먹었어요.' },
+  ];
+  return (
+    <div style={{ width: '100%', height: '100%', background: '#0E0B09', position: 'relative', fontFamily: '"Inter", -apple-system, system-ui, sans-serif', color: '#fff', overflow: 'hidden' }}>
+      <div style={{ height: '100%', overflowY: 'auto', paddingBottom: 100 }}>
+        <div style={{ position: 'relative', height: 260, background: 'linear-gradient(180deg, #3A2A1E, #1A1310)', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle at 30% 40%, rgba(255,137,4,0.35), transparent 60%), radial-gradient(circle at 70% 60%, rgba(251,44,54,0.30), transparent 60%)` }} />
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 88, opacity: 0.85, filter: 'drop-shadow(0 12px 20px rgba(0,0,0,0.5))' }}>🍲</div>
+          <div style={{ position: 'absolute', top: 58, left: 16, right: 16, display: 'flex', justifyContent: 'space-between', zIndex: 5 }}>
+            <div onClick={() => nav.go('home')} style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12v8a1 1 0 001 1h14a1 1 0 001-1v-8M16 6l-4-4-4 4M12 2v13" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+              <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 16 }}>♡</div>
+            </div>
+          </div>
+          <div style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 4 }}>
+            {[0,1,2,3].map(i => <div key={i} style={{ width: i === 0 ? 18 : 5, height: 5, borderRadius: 999, background: i === 0 ? '#fff' : 'rgba(255,255,255,0.4)' }} />)}
+          </div>
+        </div>
+        <div style={{ padding: '20px 20px 0' }}>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 8px', borderRadius: 6, background: 'rgba(255,137,4,0.15)', color: '#FFB261', whiteSpace: 'nowrap' }}>가성비 갑</span>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 8px', borderRadius: 6, background: 'rgba(91,208,106,0.12)', color: '#5BD06A', whiteSpace: 'nowrap' }}>🪑 1인석 있음</span>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 8px', borderRadius: 6, background: 'rgba(81,162,255,0.12)', color: '#51A2FF', whiteSpace: 'nowrap' }}>⏱ 5분 조리</span>
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.5, whiteSpace: 'nowrap' }}>진성식당</div>
+          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, whiteSpace: 'nowrap' }}>
+            <span style={{ color: '#FFD56B', fontWeight: 800 }}>★ 4.8</span>
+            <span style={{ color: 'rgba(255,255,255,0.5)' }}>(리뷰 326)</span>
+            <span style={{ color: 'rgba(255,255,255,0.25)' }}>·</span>
+            <span style={{ color: 'rgba(255,255,255,0.7)' }}>한식 · 백반</span>
+          </div>
+          <div style={{ marginTop: 16, padding: 14, borderRadius: 14, background: '#1A1614', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><span style={{ width: 18 }}>📍</span><span style={{ color: 'rgba(255,255,255,0.85)', flex: 1 }}>경산시 하양읍 가마실길 24 · 도보 1분</span><span style={{ color: '#FF8904', fontSize: 12, fontWeight: 700 }}>복사</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><span style={{ width: 18 }}>🕒</span><span style={{ color: 'rgba(255,255,255,0.85)', flex: 1, minWidth: 0 }}><span style={{ color: '#5BD06A', fontWeight: 700 }}>영업중</span> · 10:30 ~ 21:00<span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11 }}> (15~16:30 브레이크)</span></span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><span style={{ width: 18 }}>💰</span><span style={{ color: 'rgba(255,255,255,0.85)', flex: 1 }}>1인 평균 <b style={{ color: '#fff' }}>7,500원</b></span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><span style={{ width: 18 }}>📊</span><span style={{ color: 'rgba(255,255,255,0.85)', flex: 1 }}>지금 혼잡도</span><span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 999, color: '#5BD06A', background: 'rgba(91,208,106,0.12)' }}>● 여유</span></div>
+          </div>
+        </div>
+        <div style={{ padding: '24px 20px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: -0.3, whiteSpace: 'nowrap' }}>대표 메뉴</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap' }}>전체 12개</div>
+          </div>
+          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {menus.map((m, i) => (
+              <div key={i} style={{ padding: 12, borderRadius: 14, background: '#1A1614', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', gap: 12, alignItems: 'center' }}>
+                <div style={{ width: 52, height: 52, borderRadius: 10, flexShrink: 0, background: 'repeating-linear-gradient(135deg, #2A211B 0 4px, #221B17 4px 8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{['🍱','🍲','🍳','🥩'][i]}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>{m.name}</div>
+                    {m.tag && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, whiteSpace: 'nowrap', background: m.tag === '베스트' ? '#FB2C36' : 'rgba(255,137,4,0.18)', color: m.tag === '베스트' ? '#fff' : '#FFB261' }}>{m.tag}</span>}
+                  </div>
+                  {m.desc && <div style={{ marginTop: 2, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{m.desc}</div>}
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#FFB261', whiteSpace: 'nowrap' }}>{m.price}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ padding: '28px 20px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: -0.3, whiteSpace: 'nowrap' }}>학생 리뷰</div>
+            <div style={{ fontSize: 12, color: '#FF8904', fontWeight: 700, whiteSpace: 'nowrap' }}>전체 326개 ›</div>
+          </div>
+          <div style={{ marginTop: 12, padding: 14, borderRadius: 14, background: '#1A1614', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 32, fontWeight: 800, color: '#FFD56B', lineHeight: 1 }}>4.8</div>
+              <div style={{ marginTop: 4, fontSize: 11, color: '#FFD56B' }}>★★★★★</div>
+            </div>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {[5,4,3,2,1].map((s, i) => (
+                <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.5)', width: 12 }}>{s}</span>
+                  <div style={{ flex: 1, height: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
+                    <div style={{ width: ['72%','20%','5%','2%','1%'][i], height: '100%', borderRadius: 999, background: '#FFD56B' }} />
+                  </div>
+                  <span style={{ color: 'rgba(255,255,255,0.4)', width: 22, textAlign: 'right' }}>{[235,65,16,6,4][i]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {reviews.map((r, i) => (
+              <div key={i} style={{ padding: 14, borderRadius: 14, background: '#1A1614', border: '1px solid rgba(255,255,255,0.04)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: ['linear-gradient(135deg, #FF8904, #FB2C36)','linear-gradient(135deg, #51A2FF, #2B7FFF)'][i], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>{['김','박'][i]}</div>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700 }}>{r.author}</div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>{r.when}</div>
+                    </div>
+                  </div>
+                  <div style={{ color: '#FFD56B', fontSize: 12, fontWeight: 700 }}>{'★'.repeat(r.rating)}<span style={{ color: 'rgba(255,255,255,0.15)' }}>{'★'.repeat(5-r.rating)}</span></div>
+                </div>
+                <div style={{ marginTop: 10, display: 'flex', gap: 6 }}>
+                  {Array.from({ length: r.photos }).map((_, j) => (
+                    <div key={j} style={{ width: 64, height: 64, borderRadius: 10, background: `repeating-linear-gradient(${135+j*30}deg, #2A211B 0 5px, #221B17 5px 10px)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{['🍱','🍚','🥢'][j]}</div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 10, fontSize: 13, lineHeight: 1.5, color: 'rgba(255,255,255,0.85)' }}>{r.text}</div>
+                <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {r.tags.map(t => <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: '4px 8px', borderRadius: 999, background: 'rgba(255,137,4,0.10)', color: '#FFB261' }}># {t}</span>)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, background: 'rgba(13,11,9,0.95)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '12px 16px 26px', display: 'flex', gap: 8 }}>
+        <button style={{ width: 52, height: 52, borderRadius: 14, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 22, cursor: 'pointer' }}>♡</button>
+        <button style={{ flex: 1, height: 52, borderRadius: 14, border: '1px solid rgba(255,137,4,0.4)', background: 'rgba(255,137,4,0.08)', color: '#FFB261', fontSize: 15, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l9 7v11h-6v-7H9v7H3V9l9-7z" stroke="#FFB261" strokeWidth="2" strokeLinejoin="round"/></svg>
+          길찾기
+        </button>
+        <button onClick={() => nav.go('review')} style={{ flex: 1.4, height: 52, borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #FF8904, #FB2C36)', color: '#fff', fontSize: 15, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', boxShadow: '0 8px 20px rgba(251,44,54,0.35)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>✍️ 리뷰 쓰기</button>
+      </div>
+    </div>
+  );
+}
+
+/* ── ReviewScreen ── */
+function ReviewScreen() {
+  const nav = useNav();
+  const [overall, setOverall] = React.useState(5);
+  const [menuRatings, setMenuRatings] = React.useState({ '제육볶음 정식': 5, '김치찌개 정식': 4 });
+  const [tags, setTags] = React.useState(new Set(['가성비', '혼밥하기 좋음']));
+  const [text] = React.useState('제육볶음 정식 시켰는데 양도 많고 맛도 진짜 굿! 반찬도 5개 나오고 된장국까지... 학생 입장에서 7천원이면 진심 추천. 1인석도 있어서 다음에 또 혼밥하러 갈 듯요 👍');
+  const tagOptions = ['가성비', '혼밥하기 좋음', '빠른 조리', '양 많음', '깔끔', '친절', '주차 가능', '데이트', '회식 OK', '늦은 시간'];
+  const toggleTag = (t) => { const next = new Set(tags); next.has(t) ? next.delete(t) : next.add(t); setTags(next); };
+  const ratingLabel = ['', '별로예요', '아쉬워요', '괜찮아요', '맛있어요', '인생맛집!'];
+  const Stars = ({ value, onChange, size = 28 }) => (
+    <div style={{ display: 'flex', gap: 4 }}>
+      {[1,2,3,4,5].map(n => <div key={n} onClick={() => onChange && onChange(n)} style={{ fontSize: size, lineHeight: 1, cursor: onChange ? 'pointer' : 'default', color: n <= value ? '#FFD56B' : 'rgba(255,255,255,0.15)' }}>★</div>)}
+    </div>
+  );
+  return (
+    <div style={{ width: '100%', height: '100%', background: '#0E0B09', position: 'relative', fontFamily: '"Inter", -apple-system, system-ui, sans-serif', color: '#fff', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, background: 'rgba(13,11,9,0.95)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingTop: 58, paddingBottom: 12, paddingLeft: 16, paddingRight: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div onClick={() => nav.go('detail')} style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M6 18L18 6" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+        </div>
+        <div style={{ fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap' }}>리뷰 작성</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.3)', padding: '6px 10px', whiteSpace: 'nowrap' }}>임시저장</div>
+      </div>
+      <div style={{ height: '100%', overflowY: 'auto', paddingTop: 110, paddingBottom: 110 }}>
+        <div style={{ margin: '0 16px', padding: 12, borderRadius: 14, background: '#1A1614', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 42, height: 42, borderRadius: 10, background: 'repeating-linear-gradient(135deg, #2A211B 0 4px, #221B17 4px 8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🍲</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 800 }}>진성식당</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>한식 · 백반 · 도보 1분</div>
+          </div>
+          <div style={{ fontSize: 12, color: '#FF8904', fontWeight: 700 }}>변경</div>
+        </div>
+        <div style={{ padding: '24px 16px 0', textAlign: 'center' }}>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>전체적으로 어땠어요?</div>
+          <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}><Stars value={overall} onChange={setOverall} size={38} /></div>
+          <div style={{ marginTop: 10, fontSize: 14, fontWeight: 700, color: '#FFD56B' }}>{ratingLabel[overall]}</div>
+        </div>
+        <div style={{ padding: '28px 16px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{ fontSize: 15, fontWeight: 800, whiteSpace: 'nowrap' }}>주문한 메뉴 별점</div>
+            <div style={{ fontSize: 12, color: '#FF8904', fontWeight: 700, whiteSpace: 'nowrap' }}>+ 메뉴 추가</div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {Object.entries(menuRatings).map(([menu, rating]) => (
+              <div key={menu} style={{ padding: 12, borderRadius: 14, background: '#1A1614', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0, background: 'repeating-linear-gradient(135deg, #2A211B 0 4px, #221B17 4px 8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🍱</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>{menu}</div>
+                  <div style={{ marginTop: 4 }}><Stars value={rating} size={16} onChange={(v) => setMenuRatings({ ...menuRatings, [menu]: v })} /></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ padding: '28px 16px 0' }}>
+          <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 10 }}>사진 추가 <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 500 }}>(최대 5장)</span></div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ width: 72, height: 72, borderRadius: 12, border: '1.5px dashed rgba(255,137,4,0.4)', background: 'rgba(255,137,4,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, cursor: 'pointer' }}>
+              <div style={{ fontSize: 20, color: '#FF8904' }}>📷</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#FF8904' }}>2/5</div>
+            </div>
+            <div style={{ width: 72, height: 72, borderRadius: 12, background: 'repeating-linear-gradient(135deg, #3A2A1E 0 6px, #2A211B 6px 12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, position: 'relative' }}>🍱<div style={{ position: 'absolute', top: 4, right: 4, width: 16, height: 16, borderRadius: '50%', background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10 }}>×</div></div>
+            <div style={{ width: 72, height: 72, borderRadius: 12, background: 'repeating-linear-gradient(45deg, #3A2A1E 0 6px, #2A211B 6px 12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, position: 'relative' }}>🍚<div style={{ position: 'absolute', top: 4, right: 4, width: 16, height: 16, borderRadius: '50%', background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10 }}>×</div></div>
+          </div>
+        </div>
+        <div style={{ padding: '28px 16px 0' }}>
+          <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 10 }}>리뷰 내용</div>
+          <div style={{ padding: 14, borderRadius: 14, background: '#1A1614', border: '1px solid rgba(255,137,4,0.30)', minHeight: 130 }}>
+            <div style={{ fontSize: 14, lineHeight: 1.6, color: 'rgba(255,255,255,0.88)', whiteSpace: 'pre-wrap' }}>{text}<span style={{ display: 'inline-block', width: 2, height: 14, background: '#FF8904', marginLeft: 1, verticalAlign: 'middle', animation: 'caret 1s steps(1) infinite' }} /></div>
+          </div>
+          <div style={{ marginTop: 6, fontSize: 11, color: 'rgba(255,255,255,0.4)', textAlign: 'right' }}>{text.length} / 500</div>
+        </div>
+        <div style={{ padding: '24px 16px 0' }}>
+          <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 10 }}>어떤 점이 좋았나요? <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 500 }}>(여러개 선택)</span></div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {tagOptions.map(t => {
+              const on = tags.has(t);
+              return <div key={t} onClick={() => toggleTag(t)} style={{ padding: '9px 14px', borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', background: on ? 'rgba(255,137,4,0.15)' : 'rgba(255,255,255,0.04)', border: on ? '1px solid #FF8904' : '1px solid rgba(255,255,255,0.08)', color: on ? '#FFB261' : 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: 4 }}>{on && <span>✓</span>}# {t}</div>;
+            })}
+          </div>
+        </div>
+      </div>
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, background: 'rgba(13,11,9,0.95)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '12px 16px 26px' }}>
+        <button onClick={() => nav.go('submit')} style={{ width: '100%', height: 54, borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #FF8904, #FB2C36)', color: '#fff', fontSize: 16, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', boxShadow: '0 10px 24px rgba(251,44,54,0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>리뷰 등록하기 · 50P 적립</button>
+      </div>
+    </div>
+  );
+}
+
+/* ── SuccessOverlay ── */
+function SuccessOverlay() {
+  return (
+    <div style={{ position: 'absolute', inset: 0, zIndex: 100, background: 'rgba(13,11,9,0.88)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.25s ease-out' }}>
+      <img src="project/assets/mascot-happy.png" alt="" style={{ width: 180, height: 'auto', filter: 'drop-shadow(0 14px 30px rgba(255,137,4,0.45))', animation: 'pop 0.4s cubic-bezier(.2,1.4,.4,1)' }} />
+      <div style={{ marginTop: 14, color: '#fff', fontFamily: '"Inter", sans-serif', fontSize: 22, fontWeight: 800, letterSpacing: -0.3 }}>리뷰 등록 완료!</div>
+      <div style={{ marginTop: 6, color: 'rgba(255,255,255,0.7)', fontFamily: '"Inter", sans-serif', fontSize: 14, fontWeight: 500 }}>50P가 적립되었어요 🎉</div>
+    </div>
+  );
+}
+
+/* ── PrototypeApp ── */
+function PrototypeApp() {
+  const [screen, setScreen] = React.useState('login');
+  const [showSuccess, setShowSuccess] = React.useState(false);
+  const [key, setKey] = React.useState(0);
+  const go = (next) => {
+    if (next === 'submit') {
+      setShowSuccess(true);
+      setTimeout(() => { setShowSuccess(false); setScreen('detail'); setKey(k => k+1); }, 1900);
+      return;
+    }
+    setScreen(next); setKey(k => k+1);
+  };
+  const ctx = React.useMemo(() => ({ go, current: screen }), [screen]);
+  return (
+    <NavCtx.Provider value={ctx}>
+      <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }} key={key}>
+        {screen === 'login'  && <LoginScreen />}
+        {screen === 'home'   && <HomeScreen active="home" />}
+        {screen === 'map'    && <MapScreen />}
+        {screen === 'detail' && <DetailScreen />}
+        {screen === 'review' && <ReviewScreen />}
+        {showSuccess && <SuccessOverlay />}
+      </div>
+    </NavCtx.Provider>
+  );
+}
+
+/* ── WorkflowBoard ── */
+function MiniPhone({ children, scale = 0.55 }) {
+  return (
+    <div style={{ width: 412*scale+20, height: 916*scale+20, position: 'relative' }}>
+      <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: 412+20, height: 916+20 }}>
+        <GalaxyFrame width={412} height={916}>{children}</GalaxyFrame>
+      </div>
+    </div>
+  );
+}
+
+function StepBadge({ n }) {
+  return (
+    <div style={{ position: 'absolute', top: -16, left: -16, zIndex: 30, width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, #FF8904, #FB2C36)', color: '#fff', fontFamily: '"Inter", sans-serif', fontWeight: 800, fontSize: 18, letterSpacing: -0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 24px rgba(251,44,54,0.40), 0 0 0 4px #fff' }}>{n}</div>
+  );
+}
+
+const staticCtx = { go: () => {}, current: 'login' };
+
+function WorkflowBoard() {
+  const SCALE = 0.55;
+  const PHONE_W = 412*SCALE+20;
+  const PHONE_H = 916*SCALE+20;
+  const GAP = 86;
+  const phones = [
+    { id: 'login',  title: '로그인',    sub: '카카오 · 구글 · 학생 인증',  render: <LoginScreen /> },
+    { id: 'home',   title: '홈',        sub: '추천 · 카테고리 · 예산 필터', render: <HomeScreen active="home" /> },
+    { id: 'detail', title: '식당 상세', sub: '메뉴 · 별점 · 학생 리뷰',    render: <DetailScreen /> },
+    { id: 'review', title: '리뷰 작성', sub: '별점 · 사진 · 태그',          render: <ReviewScreen /> },
+  ];
+  const transitions = [
+    { label: '카카오 로그인', sub: '학생 인증 1초' },
+    { label: '식당 카드 클릭', sub: '추천 또는 리스트' },
+    { label: '리뷰 쓰기 버튼', sub: '하단 CTA' },
+  ];
+  return (
+    <NavCtx.Provider value={staticCtx}>
+    <div style={{ width: 2540, height: 1280, position: 'relative', background: `radial-gradient(circle at 20% 10%, rgba(255,137,4,0.08), transparent 40%), radial-gradient(circle at 80% 90%, rgba(251,44,54,0.06), transparent 50%), linear-gradient(180deg, #FFF8F0 0%, #FCEFE2 100%)`, borderRadius: 24, overflow: 'hidden', fontFamily: '"Inter", sans-serif' }}>
+      <div style={{ position: 'absolute', top: 32, left: 40 }}>
+        <div style={{ display: 'inline-block', padding: '5px 12px', borderRadius: 999, background: 'rgba(255,137,4,0.12)', color: '#FF6900', fontSize: 11, fontWeight: 800, letterSpacing: 1, marginBottom: 8 }}>USER FLOW · Galaxy S25 Ultra</div>
+        <div style={{ fontSize: 36, fontWeight: 800, color: '#1a1714', letterSpacing: -0.8 }}>맛일짱 사용자 시나리오</div>
+        <div style={{ marginTop: 6, fontSize: 14, color: 'rgba(40,30,20,0.55)', maxWidth: 560 }}>신입생 김경일 학생이 점심 메뉴를 정하지 못해 앱을 열고, 리뷰까지 남기는 전체 흐름</div>
+      </div>
+      <div style={{ position: 'absolute', top: 32, right: 40, textAlign: 'right' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(40,30,20,0.55)' }}>분기 동선</div>
+        <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+          <div style={{ padding: '6px 12px', borderRadius: 999, background: '#fff', border: '1px solid rgba(0,0,0,0.08)', fontSize: 12, fontWeight: 700, color: '#1a1714', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>홈 → 🗺️ 지도 → 마커 → 상세</div>
+        </div>
+      </div>
+      <div style={{ position: 'absolute', left: 40, top: 180, width: 320, padding: 18, borderRadius: 16, background: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 20px rgba(0,0,0,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg, #FF8904, #FB2C36)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 20 }}>김경</div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: '#1a1714' }}>김경일 · 신입생</div>
+            <div style={{ fontSize: 11, color: 'rgba(40,30,20,0.6)' }}>경영학과 25학번 · 기숙사 거주</div>
+          </div>
+        </div>
+        <div style={{ marginTop: 12, padding: 10, borderRadius: 10, background: '#FFF7ED', fontSize: 12, color: '#7A4500', lineHeight: 1.5 }}>"학교 주변 어디서 뭐 먹어야 할지 모르겠고, 학생 가격대로 양 많은 곳이 어딘지 궁금해요"</div>
+        <div style={{ marginTop: 12, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {['예산 8천원', '혼밥 OK', '빠른 조리'].map(t => <span key={t} style={{ padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, background: 'rgba(255,137,4,0.10)', color: '#FF6900' }}>{t}</span>)}
+        </div>
+      </div>
+      <div style={{ position: 'absolute', left: 400, top: 180, right: 40, display: 'flex', alignItems: 'flex-start', gap: GAP - 30 }}>
+        {phones.map((p, i) => (
+          <React.Fragment key={p.id}>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <StepBadge n={`0${i+1}`} />
+              <MiniPhone scale={SCALE}>{p.render}</MiniPhone>
+              <div style={{ marginTop: 14, textAlign: 'center' }}>
+                <div style={{ fontSize: 17, fontWeight: 800, color: '#1a1714', letterSpacing: -0.3 }}>{p.title}</div>
+                <div style={{ marginTop: 4, fontSize: 12, color: 'rgba(40,30,20,0.55)', fontWeight: 500 }}>{p.sub}</div>
+              </div>
+            </div>
+            {i < phones.length - 1 && (
+              <div style={{ flexShrink: 0, paddingTop: PHONE_H/2-28, display: 'flex', flexDirection: 'column', alignItems: 'center', width: GAP-30 }}>
+                <div style={{ padding: '5px 10px', borderRadius: 8, background: '#fff', boxShadow: '0 4px 10px rgba(0,0,0,0.08)', whiteSpace: 'nowrap', fontSize: 11, fontWeight: 800, color: '#FF6900' }}>{transitions[i].label}</div>
+                <div style={{ marginTop: 4, fontSize: 10, color: 'rgba(40,30,20,0.45)', whiteSpace: 'nowrap', fontWeight: 500 }}>{transitions[i].sub}</div>
+                <svg width={GAP-30} height="36" viewBox={`0 0 ${GAP-30} 36`} style={{ marginTop: 8, overflow: 'visible' }}>
+                  <defs><marker id={`fa-${i}`} markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L8,5 L0,10 z" fill="#FF8904"/></marker></defs>
+                  <path d={`M 6 18 L ${GAP-44} 18`} stroke="#FF8904" strokeWidth="2.5" strokeDasharray="6 4" fill="none" strokeLinecap="round" markerEnd={`url(#fa-${i})`}/>
+                </svg>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+        <div style={{ flexShrink: 0, paddingTop: PHONE_H/2-28, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ padding: '5px 10px', borderRadius: 8, background: '#fff', boxShadow: '0 4px 10px rgba(0,0,0,0.08)', whiteSpace: 'nowrap', fontSize: 11, fontWeight: 800, color: '#FF6900' }}>리뷰 등록</div>
+          <div style={{ marginTop: 4, fontSize: 10, color: 'rgba(40,30,20,0.45)', whiteSpace: 'nowrap', fontWeight: 500 }}>50P 적립</div>
+          <svg width="56" height="36" style={{ marginTop: 8, overflow: 'visible' }}>
+            <defs><marker id="fa-end" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L8,5 L0,10 z" fill="#FF8904"/></marker></defs>
+            <path d="M 6 18 L 44 18" stroke="#FF8904" strokeWidth="2.5" strokeDasharray="6 4" fill="none" strokeLinecap="round" markerEnd="url(#fa-end)"/>
+          </svg>
+          <div style={{ marginTop: 8, width: 140, padding: 14, borderRadius: 16, background: 'linear-gradient(135deg, #FF8904, #FB2C36)', color: '#fff', textAlign: 'center', boxShadow: '0 14px 30px rgba(251,44,54,0.35)' }}>
+            <img src="project/assets/mascot-happy.png" alt="" style={{ width: 84, height: 84, objectFit: 'contain' }} />
+            <div style={{ marginTop: 4, fontSize: 13, fontWeight: 800 }}>완료!</div>
+            <div style={{ marginTop: 2, fontSize: 10, opacity: 0.9 }}>🎉 +50P</div>
+          </div>
+        </div>
+      </div>
+      <div style={{ position: 'absolute', left: 40, right: 40, bottom: 32, padding: 20, borderRadius: 16, background: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 20px rgba(0,0,0,0.04)', display: 'flex', gap: 32, alignItems: 'center' }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(40,30,20,0.5)', letterSpacing: 1 }}>BRAND</div>
+          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img src="project/assets/mascot-hero.png" alt="" style={{ width: 60, height: 60, objectFit: 'contain' }} />
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#1a1714' }}>맛일짱</div>
+              <div style={{ fontSize: 11, color: 'rgba(40,30,20,0.55)' }}>경일대 학생 전용 맛집 앱</div>
+            </div>
+          </div>
+        </div>
+        <div style={{ width: 1, height: 64, background: 'rgba(0,0,0,0.08)' }} />
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(40,30,20,0.5)', letterSpacing: 1 }}>COLOR</div>
+          <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
+            {[{ c: '#FF8904', n: 'Primary' }, { c: '#FB2C36', n: 'Accent' }, { c: '#FFD56B', n: 'Star' }, { c: '#0E0B09', n: 'Dark BG' }, { c: '#1A1614', n: 'Surface' }].map(s => (
+              <div key={s.c} style={{ textAlign: 'center' }}>
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: s.c, boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)' }} />
+                <div style={{ marginTop: 4, fontSize: 9, color: 'rgba(40,30,20,0.55)' }}>{s.n}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ width: 1, height: 64, background: 'rgba(0,0,0,0.08)' }} />
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(40,30,20,0.5)', letterSpacing: 1 }}>TYPE</div>
+          <div style={{ marginTop: 8, display: 'flex', gap: 18, alignItems: 'baseline' }}>
+            <div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: '#1a1714', fontFamily: '"Black Han Sans"', lineHeight: 1 }}>맛일짱</div>
+              <div style={{ fontSize: 9, color: 'rgba(40,30,20,0.55)', marginTop: 4 }}>Black Han Sans · 헤드라인</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: '#1a1714', lineHeight: 1 }}>Inter Bold</div>
+              <div style={{ fontSize: 9, color: 'rgba(40,30,20,0.55)', marginTop: 4 }}>Inter · 본문/UI</div>
+            </div>
+          </div>
+        </div>
+        <div style={{ width: 1, height: 64, background: 'rgba(0,0,0,0.08)' }} />
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(40,30,20,0.5)', letterSpacing: 1 }}>MASCOT</div>
+          <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+            {[
+              { f: 'project/assets/mascot-hero.png', n: '히어로' },
+              { f: 'project/assets/mascot-happy.png', n: '성공' },
+              { f: 'project/assets/mascot-think.png', n: '추천' },
+              { f: 'project/assets/mascot-surprise.png', n: '빈 상태' },
+              { f: 'project/assets/mascot-angry.png', n: '에러' },
+            ].map(m => (
+              <div key={m.f} style={{ textAlign: 'center' }}>
+                <div style={{ width: 56, height: 56, borderRadius: 12, background: '#FFF7ED', border: '1px solid rgba(255,137,4,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src={m.f} alt="" style={{ width: 48, height: 48, objectFit: 'contain' }} />
+                </div>
+                <div style={{ marginTop: 4, fontSize: 9, color: 'rgba(40,30,20,0.55)' }}>{m.n}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+    </NavCtx.Provider>
+  );
+}
+
+/* ── DesignCanvas (simplified pan/zoom) ── */
+function DesignCanvas({ children }) {
+  const vpRef = React.useRef(null);
+  const worldRef = React.useRef(null);
+  const tf = React.useRef({ x: 60, y: 60, scale: 0.75 });
+
+  const apply = React.useCallback(() => {
+    const { x, y, scale } = tf.current;
+    const el = worldRef.current;
+    if (!el) return;
+    el.style.transform = `translate3d(${x}px,${y}px,0) scale(${scale})`;
+    el.style.setProperty('--dc-inv-zoom', String(1/scale));
+  }, []);
+
+  React.useLayoutEffect(() => { apply(); }, [apply]);
+
+  React.useEffect(() => {
+    const vp = vpRef.current;
+    if (!vp) return;
+    const zoomAt = (cx, cy, factor) => {
+      const r = vp.getBoundingClientRect();
+      const px = cx-r.left, py = cy-r.top;
+      const t = tf.current;
+      const next = Math.min(8, Math.max(0.1, t.scale*factor));
+      const k = next/t.scale;
+      t.x = px-(px-t.x)*k; t.y = py-(py-t.y)*k; t.scale = next;
+      apply();
+    };
+    const isWheel = (e) => e.deltaMode !== 0 || (e.deltaX === 0 && Number.isInteger(e.deltaY) && Math.abs(e.deltaY) >= 40);
+    const onWheel = (e) => {
+      e.preventDefault();
+      if (e.ctrlKey || e.metaKey) zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY*0.01));
+      else if (isWheel(e)) zoomAt(e.clientX, e.clientY, Math.exp(-Math.sign(e.deltaY)*0.18));
+      else { tf.current.x -= e.deltaX; tf.current.y -= e.deltaY; apply(); }
+    };
+    let drag = null;
+    const onPD = (e) => {
+      const onBg = !e.target.closest('[data-slot]');
+      if (!(e.button === 1 || (e.button === 0 && onBg))) return;
+      e.preventDefault(); vp.setPointerCapture(e.pointerId);
+      drag = { id: e.pointerId, lx: e.clientX, ly: e.clientY }; vp.style.cursor = 'grabbing';
+    };
+    const onPM = (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      tf.current.x += e.clientX-drag.lx; tf.current.y += e.clientY-drag.ly;
+      drag.lx = e.clientX; drag.ly = e.clientY; apply();
+    };
+    const onPU = (e) => { if (!drag || e.pointerId !== drag.id) return; vp.releasePointerCapture(e.pointerId); drag = null; vp.style.cursor = ''; };
+    vp.addEventListener('wheel', onWheel, { passive: false });
+    vp.addEventListener('pointerdown', onPD);
+    vp.addEventListener('pointermove', onPM);
+    vp.addEventListener('pointerup', onPU);
+    vp.addEventListener('pointercancel', onPU);
+    return () => {
+      vp.removeEventListener('wheel', onWheel);
+      vp.removeEventListener('pointerdown', onPD);
+      vp.removeEventListener('pointermove', onPM);
+      vp.removeEventListener('pointerup', onPU);
+      vp.removeEventListener('pointercancel', onPU);
+    };
+  }, [apply]);
+
+  const gridSvg = `url("data:image/svg+xml,%3Csvg width='120' height='120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M120 0H0v120' fill='none' stroke='rgba(0,0,0,0.06)' stroke-width='1'/%3E%3C/svg%3E")`;
+  return (
+    <div ref={vpRef} style={{ height: '100vh', width: '100vw', background: '#f0eee9', overflow: 'hidden', overscrollBehavior: 'none', touchAction: 'none', position: 'relative', cursor: 'default' }}>
+      <div ref={worldRef} style={{ position: 'absolute', top: 0, left: 0, transformOrigin: '0 0', willChange: 'transform', width: 'max-content' }}>
+        <div style={{ position: 'absolute', inset: -6000, backgroundImage: gridSvg, backgroundSize: '120px 120px', pointerEvents: 'none', zIndex: -1 }} />
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ── Section & Artboard ── */
+function Section({ title, subtitle, children }) {
+  return (
+    <div style={{ marginBottom: 80, padding: '0 60px' }}>
+      <div style={{ paddingBottom: 32 }}>
+        <div style={{ fontSize: 28, fontWeight: 600, color: 'rgba(40,30,20,0.85)', letterSpacing: -0.4, marginBottom: 6, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif' }}>{title}</div>
+        {subtitle && <div style={{ fontSize: 16, color: 'rgba(60,50,40,0.6)', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif' }}>{subtitle}</div>}
+      </div>
+      <div style={{ display: 'flex', gap: 48, alignItems: 'flex-start', width: 'max-content' }}>{children}</div>
+    </div>
+  );
+}
+
+function Artboard({ label, width, height, children }) {
+  return (
+    <div data-slot={label} style={{ position: 'relative', flexShrink: 0 }}>
+      <div style={{ position: 'absolute', bottom: '100%', left: 0, marginBottom: 8, fontSize: 13, fontWeight: 500, color: 'rgba(60,50,40,0.7)', whiteSpace: 'nowrap', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif' }}>{label}</div>
+      <div style={{ borderRadius: 2, boxShadow: '0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06)', overflow: 'hidden', width, height, background: '#fff' }}>{children}</div>
+    </div>
+  );
+}
+
+/* ── App ── */
+const W = 412, H = 916;
+
+function App() {
+  return (
+    <DesignCanvas>
+      <Section id="proto" title="▶ 인터랙티브 프로토타입" subtitle="Galaxy S25 Ultra 기준 · 클릭으로 전체 플로우 체험">
+        <Artboard label="클릭으로 체험 · 로그인 → 완료" width={W+20} height={H+20}>
+          <GalaxyFrame width={W} height={H}><PrototypeApp /></GalaxyFrame>
+        </Artboard>
+      </Section>
+
+      <Section title="사용자 워크플로우" subtitle="신입생이 점심을 정하지 못해 앱을 켜고 리뷰를 남기기까지">
+        <Artboard label="User Flow · Galaxy S25 Ultra" width={2540} height={1280}>
+          <WorkflowBoard />
+        </Artboard>
+      </Section>
+
+      <Section title="화면 스펙 · 5 screens" subtitle="각 화면의 풀사이즈 디자인 스펙 · Galaxy S25 Ultra · Dark mode">
+        <Artboard label="01 · 로그인 / 회원가입" width={W+20} height={H+20}>
+          <GalaxyFrame width={W} height={H}>
+            <NavCtx.Provider value={staticCtx}><LoginScreen /></NavCtx.Provider>
+          </GalaxyFrame>
+        </Artboard>
+        <Artboard label="02 · 홈" width={W+20} height={H+20}>
+          <GalaxyFrame width={W} height={H}>
+            <NavCtx.Provider value={staticCtx}><HomeScreen active="home" /></NavCtx.Provider>
+          </GalaxyFrame>
+        </Artboard>
+        <Artboard label="03 · 지도" width={W+20} height={H+20}>
+          <GalaxyFrame width={W} height={H}>
+            <NavCtx.Provider value={staticCtx}><MapScreen /></NavCtx.Provider>
+          </GalaxyFrame>
+        </Artboard>
+        <Artboard label="04 · 식당 상세" width={W+20} height={H+20}>
+          <GalaxyFrame width={W} height={H}>
+            <NavCtx.Provider value={staticCtx}><DetailScreen /></NavCtx.Provider>
+          </GalaxyFrame>
+        </Artboard>
+        <Artboard label="05 · 리뷰 작성" width={W+20} height={H+20}>
+          <GalaxyFrame width={W} height={H}>
+            <NavCtx.Provider value={staticCtx}><ReviewScreen /></NavCtx.Provider>
+          </GalaxyFrame>
+        </Artboard>
+      </Section>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
