@@ -1,32 +1,25 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import TabBar from '../components/TabBar'
 import { RESTAURANTS } from '../data/restaurants'
 import { useApp } from '../store/AppStore'
-import { KAKAO_MAP_KEY, CAMPUS, restaurantLatLng } from '../config'
-import { useKakaoLoader } from '../hooks/useKakaoLoader'
+import { CAMPUS, restaurantLatLng } from '../config'
 
 const ratingColor = (r) => r >= 4.5 ? '#FF8904' : r >= 4.0 ? '#FFB261' : '#9CA3AF'
 const busyStyle = (b) => b === '여유' ? { color: '#5BD06A', bg: 'rgba(91,208,106,0.12)' } : b === '보통' ? { color: '#FFB261', bg: 'rgba(255,178,97,0.12)' } : { color: '#FF6B6B', bg: 'rgba(255,107,107,0.12)' }
 const busyDot = (b) => b === '여유' ? '#5BD06A' : b === '보통' ? '#FFB261' : '#FF6B6B'
 
-// 빌드 키 또는 런타임(localStorage) 키
-const resolveKey = () => {
-  if (KAKAO_MAP_KEY) return KAKAO_MAP_KEY
-  try { return (localStorage.getItem('kakaoKey') || '').trim() } catch { return '' }
-}
-
-function buildPin(r, selected) {
+function pinHtml(r, selected) {
   const size = selected ? 46 : 36
-  const el = document.createElement('div')
-  el.style.cssText = 'position:relative;cursor:pointer;'
-  el.innerHTML = `
-    <div style="width:${size}px;height:${size}px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${ratingColor(r.rating)};border:2.5px solid ${selected ? '#fff' : 'rgba(255,255,255,0.7)'};display:flex;align-items:center;justify-content:center;box-shadow:${selected ? '0 10px 24px rgba(255,137,4,0.6)' : '0 4px 12px rgba(0,0,0,0.45)'}">
-      <span style="transform:rotate(45deg);font-size:${selected ? 21 : 16}px;line-height:1">${r.emoji}</span>
-    </div>
-    <div style="position:absolute;top:-3px;right:-3px;width:13px;height:13px;border-radius:50%;background:${busyDot(r.busy)};border:2px solid #fff"></div>
-  `
-  return el
+  return `
+    <div style="position:relative;width:${size}px;height:${size}px">
+      <div style="width:${size}px;height:${size}px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${ratingColor(r.rating)};border:2.5px solid ${selected ? '#fff' : 'rgba(255,255,255,0.7)'};display:flex;align-items:center;justify-content:center;box-shadow:${selected ? '0 10px 24px rgba(255,137,4,0.6)' : '0 4px 12px rgba(0,0,0,0.45)'}">
+        <span style="transform:rotate(45deg);font-size:${selected ? 21 : 16}px;line-height:1">${r.emoji}</span>
+      </div>
+      <div style="position:absolute;top:-3px;right:-3px;width:13px;height:13px;border-radius:50%;background:${busyDot(r.busy)};border:2px solid #fff"></div>
+    </div>`
 }
 
 export default function Map() {
@@ -37,133 +30,90 @@ export default function Map() {
   const bs = busyStyle(sel.busy)
   const wished = isWished(sel.id)
 
-  const apiKey = resolveKey()
-  const { loaded, error } = useKakaoLoader(apiKey)
-  const useReal = loaded && !error
-
   const mapDivRef = useRef(null)
   const mapRef = useRef(null)
-  const overlaysRef = useRef([])
+  const markersRef = useRef({})
 
   const openNav = (e, r) => {
     e.stopPropagation()
     const { lat, lng } = restaurantLatLng(r)
-    // 카카오맵 길찾기 (도착지 좌표 + 이름)
     window.open(`https://map.kakao.com/link/to/${encodeURIComponent(r.name)},${lat},${lng}`, '_blank')
   }
 
   // 지도 1회 초기화
   useEffect(() => {
-    if (!useReal || !mapDivRef.current || mapRef.current) return
-    const kakao = window.kakao
-    const map = new kakao.maps.Map(mapDivRef.current, {
-      center: new kakao.maps.LatLng(CAMPUS.lat, CAMPUS.lng),
-      level: 4,
+    if (!mapDivRef.current || mapRef.current) return
+    const map = L.map(mapDivRef.current, {
+      center: [CAMPUS.lat, CAMPUS.lng],
+      zoom: 16,
+      zoomControl: false,
+      attributionControl: false,
     })
     mapRef.current = map
 
-    // 캠퍼스(현위치) 마커
-    const campusEl = document.createElement('div')
-    campusEl.innerHTML = `
-      <div style="position:relative;width:18px;height:18px">
-        <div style="position:absolute;inset:-10px;border-radius:50%;background:rgba(81,162,255,0.25);animation:pulse 2s infinite"></div>
-        <div style="width:18px;height:18px;border-radius:50%;background:#51A2FF;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.4)"></div>
-      </div>`
-    new kakao.maps.CustomOverlay({
-      map, position: new kakao.maps.LatLng(CAMPUS.lat, CAMPUS.lng),
-      content: campusEl, yAnchor: 0.5, xAnchor: 0.5, zIndex: 1,
-    })
-  }, [useReal])
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+      maxZoom: 20,
+    }).addTo(map)
 
-  // 마커(선택 상태 반영) 갱신
+    L.control.attribution({ prefix: false, position: 'bottomleft' })
+      .addAttribution('© OpenStreetMap · CARTO')
+      .addTo(map)
+
+    // 캠퍼스(현위치) 마커
+    const campusIcon = L.divIcon({
+      className: '',
+      html: `<div style="position:relative;width:18px;height:18px">
+        <div style="position:absolute;inset:-9px;border-radius:50%;background:rgba(81,162,255,0.30);animation:pulse 2s infinite"></div>
+        <div style="width:18px;height:18px;border-radius:50%;background:#51A2FF;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.5)"></div>
+      </div>`,
+      iconSize: [18, 18],
+      iconAnchor: [9, 9],
+    })
+    L.marker([CAMPUS.lat, CAMPUS.lng], { icon: campusIcon, interactive: false }).addTo(map)
+
+    // 처음 화면에 모든 마커가 보이도록 살짝 맞춤
+    const pts = RESTAURANTS.map(r => { const p = restaurantLatLng(r); return [p.lat, p.lng] })
+    pts.push([CAMPUS.lat, CAMPUS.lng])
+    map.fitBounds(L.latLngBounds(pts).pad(0.15))
+    setTimeout(() => map.invalidateSize(), 60)
+
+    return () => { map.remove(); mapRef.current = null; markersRef.current = {} }
+  }, [])
+
+  // 마커 갱신 (선택 상태 반영)
   useEffect(() => {
-    if (!useReal || !mapRef.current) return
-    const kakao = window.kakao
-    overlaysRef.current.forEach(o => o.setMap(null))
-    overlaysRef.current = []
+    const map = mapRef.current
+    if (!map) return
+    Object.values(markersRef.current).forEach(m => m.remove())
+    markersRef.current = {}
 
     RESTAURANTS.forEach(r => {
       const { lat, lng } = restaurantLatLng(r)
       const selected = r.id === selectedId
-      const el = buildPin(r, selected)
-      el.onclick = () => setSelectedId(r.id)
-      const ov = new kakao.maps.CustomOverlay({
-        map: mapRef.current,
-        position: new kakao.maps.LatLng(lat, lng),
-        content: el, yAnchor: 1, xAnchor: 0.5,
-        zIndex: selected ? 10 : 5,
+      const size = selected ? 46 : 36
+      const icon = L.divIcon({
+        className: '',
+        html: pinHtml(r, selected),
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size],
       })
-      overlaysRef.current.push(ov)
+      const marker = L.marker([lat, lng], { icon, zIndexOffset: selected ? 1000 : 0 }).addTo(map)
+      marker.on('click', () => setSelectedId(r.id))
+      markersRef.current[r.id] = marker
     })
 
-    const { lat, lng } = restaurantLatLng(sel)
-    mapRef.current.panTo(new kakao.maps.LatLng(lat, lng))
-  }, [useReal, selectedId, sel])
+    const p = restaurantLatLng(sel)
+    map.panTo([p.lat, p.lng], { animate: true, duration: 0.4 })
+  }, [selectedId, sel])
 
   return (
     <div style={{ width: '100%', height: '100dvh', background: '#0E0B09', position: 'relative', color: '#fff', overflow: 'hidden' }}>
-      {/* Real Kakao map */}
-      {useReal && <div ref={mapDivRef} style={{ position: 'absolute', inset: 0 }} />}
-
-      {/* Fallback SVG map (no key / load error) */}
-      {!useReal && (
-        <>
-          <div style={{ position: 'absolute', inset: 0 }}>
-            <svg width="100%" height="100%" viewBox="0 0 412 916" preserveAspectRatio="xMidYMid slice">
-              <rect width="412" height="916" fill="#15110E"/>
-              <defs>
-                <pattern id="g" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M40 0L0 0 0 40" stroke="rgba(255,255,255,0.025)" fill="none" strokeWidth="1"/>
-                </pattern>
-              </defs>
-              <rect width="412" height="916" fill="url(#g)"/>
-              <path d="M-20 320 L440 230" stroke="rgba(255,255,255,0.06)" strokeWidth="28"/>
-              <path d="M-20 320 L440 230" stroke="rgba(255,255,255,0.09)" strokeWidth="2" strokeDasharray="8 6"/>
-              <path d="M195 -20 L245 940" stroke="rgba(255,255,255,0.06)" strokeWidth="28"/>
-              <path d="M195 -20 L245 940" stroke="rgba(255,255,255,0.09)" strokeWidth="2" strokeDasharray="8 6"/>
-              <path d="M-20 550 L440 580" stroke="rgba(255,255,255,0.05)" strokeWidth="20"/>
-              <rect x="44" y="70" width="160" height="140" rx="10" fill="rgba(255,137,4,0.06)" stroke="rgba(255,137,4,0.20)" strokeWidth="1.2"/>
-              <text x="124" y="118" textAnchor="middle" fill="rgba(255,137,4,0.7)" fontSize="13" fontWeight="700" fontFamily="Inter">경일대학교</text>
-              <text x="124" y="138" textAnchor="middle" fill="rgba(255,137,4,0.45)" fontSize="10" fontFamily="Inter">KYUNGIL UNIV.</text>
-              <rect x="60" y="155" width="50" height="40" rx="4" fill="rgba(255,137,4,0.10)"/>
-              <rect x="120" y="155" width="70" height="40" rx="4" fill="rgba(255,137,4,0.10)"/>
-              <rect x="258" y="90" width="114" height="70" rx="8" fill="rgba(91,208,106,0.06)" stroke="rgba(91,208,106,0.18)" strokeWidth="1.2"/>
-              <text x="315" y="130" textAnchor="middle" fill="rgba(91,208,106,0.7)" fontSize="12" fontWeight="600" fontFamily="Inter">기숙사</text>
-              <circle cx="330" cy="580" r="48" fill="rgba(91,208,106,0.06)" stroke="rgba(91,208,106,0.18)" strokeWidth="1.2"/>
-              <text x="330" y="584" textAnchor="middle" fill="rgba(91,208,106,0.5)" fontSize="10" fontFamily="Inter">근린공원</text>
-              <rect x="36" y="620" width="48" height="72" rx="5" fill="rgba(255,255,255,0.04)"/>
-              <rect x="96" y="660" width="60" height="60" rx="5" fill="rgba(255,255,255,0.04)"/>
-              <rect x="278" y="700" width="72" height="48" rx="5" fill="rgba(255,255,255,0.04)"/>
-              <circle cx="185" cy="200" r="22" fill="rgba(81,162,255,0.15)">
-                <animate attributeName="r" values="16;26;16" dur="2.5s" repeatCount="indefinite"/>
-                <animate attributeName="opacity" values="0.5;0;0.5" dur="2.5s" repeatCount="indefinite"/>
-              </circle>
-              <circle cx="185" cy="200" r="8" fill="#51A2FF" stroke="#fff" strokeWidth="3"/>
-            </svg>
-          </div>
-
-          {RESTAURANTS.map((r) => {
-            const isSelected = selectedId === r.id
-            const size = isSelected ? 48 : 38
-            return (
-              <button key={r.id} onClick={() => setSelectedId(r.id)} style={{ position: 'absolute', left: r.mapX, top: r.mapY, transform: 'translate(-50%, -100%)', cursor: 'pointer', zIndex: isSelected ? 10 : 5, background: 'none', border: 'none', padding: 0 }}>
-                <div style={{ width: size, height: size, borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)', background: ratingColor(r.rating), border: `2.5px solid ${isSelected ? '#fff' : 'rgba(255,255,255,0.5)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isSelected ? '0 10px 24px rgba(255,137,4,0.55)' : '0 4px 12px rgba(0,0,0,0.4)', transition: 'all 0.2s' }}>
-                  <span style={{ transform: 'rotate(45deg)', fontSize: isSelected ? 22 : 17 }}>{r.emoji}</span>
-                </div>
-                <div style={{ position: 'absolute', top: -4, right: -4, width: 14, height: 14, borderRadius: '50%', background: busyDot(r.busy), border: '2px solid #0E0B09' }} />
-              </button>
-            )
-          })}
-
-          {/* 임시지도 안내 배지 */}
-          <div style={{ position: 'absolute', top: 160, left: '50%', transform: 'translateX(-50%)', zIndex: 14, background: 'rgba(20,16,14,0.9)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,137,4,0.25)', borderRadius: 999, padding: '6px 14px', fontSize: 11, color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap' }}>
-            {error === 'no-key' ? '🗺️ 임시 지도 · 카카오맵 키 설정 시 실제 지도로 전환' : '🗺️ 지도를 불러오지 못했어요 · 임시 지도 표시'}
-          </div>
-        </>
-      )}
+      {/* Leaflet map */}
+      <div ref={mapDivRef} style={{ position: 'absolute', inset: 0, background: '#15110E' }} />
 
       {/* Search bar */}
-      <div style={{ position: 'absolute', top: 52, left: 16, right: 16, display: 'flex', gap: 8, zIndex: 15 }}>
+      <div style={{ position: 'absolute', top: 52, left: 16, right: 16, display: 'flex', gap: 8, zIndex: 500 }}>
         <button onClick={() => go('/home')} style={{ flex: 1, height: 46, borderRadius: 14, background: 'rgba(20,16,14,0.88)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', padding: '0 14px', gap: 10, cursor: 'pointer', textAlign: 'left' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#fff" strokeWidth="2"/><path d="M20 20l-3.5-3.5" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
           <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>이 지역에서 검색</span>
@@ -174,14 +124,14 @@ export default function Map() {
       </div>
 
       {/* Filter chips */}
-      <div style={{ position: 'absolute', top: 110, left: 0, right: 0, display: 'flex', gap: 8, padding: '0 16px', overflowX: 'auto', scrollbarWidth: 'none', zIndex: 15 }}>
+      <div style={{ position: 'absolute', top: 110, left: 0, right: 0, display: 'flex', gap: 8, padding: '0 16px', overflowX: 'auto', scrollbarWidth: 'none', zIndex: 500 }}>
         {[{ label: '⭐ 4.5+', on: true }, { label: '🪑 혼밥 가능', on: false }, { label: '⏱ 빠른 조리', on: false }, { label: '💰 8천원 이하', on: true }, { label: '🟢 한산', on: false }].map((c, i) => (
           <button key={i} onClick={() => go('/home')} style={{ flex: '0 0 auto', padding: '7px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', background: c.on ? '#FF8904' : 'rgba(20,16,14,0.88)', border: c.on ? '1px solid #FF8904' : '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)', color: '#fff', cursor: 'pointer' }}>{c.label}</button>
         ))}
       </div>
 
       {/* Preview card */}
-      <div onClick={() => go(`/restaurant/${sel.id}`)} style={{ position: 'absolute', bottom: 28, left: 16, right: 16, zIndex: 16, background: '#1A1614', cursor: 'pointer', borderRadius: 22, padding: 16, border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 20px 50px rgba(0,0,0,0.55)', display: 'flex', gap: 14, animation: 'slideUp 0.2s ease-out' }}>
+      <div onClick={() => go(`/restaurant/${sel.id}`)} style={{ position: 'absolute', bottom: 28, left: 16, right: 16, zIndex: 500, background: '#1A1614', cursor: 'pointer', borderRadius: 22, padding: 16, border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 20px 50px rgba(0,0,0,0.55)', display: 'flex', gap: 14, animation: 'slideUp 0.2s ease-out' }}>
         <div style={{ width: 88, height: 88, borderRadius: 14, flexShrink: 0, background: 'repeating-linear-gradient(135deg, #2A211B 0 6px, #221B17 6px 12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38, position: 'relative' }}>
           {sel.emoji}
           <div style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(0,0,0,0.6)', color: '#FFD56B', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 6 }}>★ {sel.rating}</div>
