@@ -53,6 +53,7 @@ export default function Home() {
   const [extraFilters, setExtraFilters] = useState({ solo: false, quiet: false })
   const [query, setQuery] = useState('')
   const [showSheet, setShowSheet] = useState(false)
+  const [showCampus, setShowCampus] = useState(false)
   // temp state while sheet is open
   const [sheetSort, setSheetSort] = useState('distance')
   const [sheetExtra, setSheetExtra] = useState({ solo: false, quiet: false })
@@ -138,7 +139,10 @@ export default function Home() {
         <div style={{ padding: '56px 20px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>📍 경일대 본관 앞</div>
+              <button onClick={() => setShowCampus(true)} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: 'rgba(255,255,255,0.55)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                📍 경일대 본관 앞
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
               <div style={{ marginTop: 4, fontSize: 22, fontWeight: 800, letterSpacing: -0.3 }}>오늘 뭐 먹지? <span style={{ color: '#FF8904' }}>🍴</span></div>
             </div>
             <button onClick={() => go('/my')} style={{ width: 40, height: 40, borderRadius: 14, background: 'linear-gradient(135deg, #FF8904, #FB2C36)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, boxShadow: '0 8px 20px rgba(251,44,54,0.35)', border: 'none', color: '#fff', cursor: 'pointer' }}>김</button>
@@ -289,6 +293,41 @@ export default function Home() {
       </div>
 
       <TabBar />
+
+      {/* Campus selector — 확장성 노출 */}
+      {showCampus && (
+        <>
+          <div onClick={() => setShowCampus(false)} style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }} />
+          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, background: '#1C1714', borderRadius: '24px 24px 0 0', padding: '0 20px 40px', animation: 'slideUp 0.25s ease-out', boxShadow: '0 -20px 60px rgba(0,0,0,0.6)' }}>
+            <div style={{ width: 36, height: 4, borderRadius: 999, background: 'rgba(255,255,255,0.18)', margin: '14px auto 18px' }} />
+            <div style={{ fontSize: 17, fontWeight: 800, marginBottom: 4 }}>캠퍼스 선택</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 18 }}>경일대에서 시작해 전국 대학가로 확장하고 있어요 🚀</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, background: 'rgba(255,137,4,0.12)', border: '1.5px solid #FF8904' }}>
+                <span style={{ fontSize: 22 }}>🏫</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#FF8904' }}>경일대학교</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>맛집 18곳 · 현재 이용 중</div>
+                </div>
+                <span style={{ fontSize: 16, color: '#FF8904' }}>✓</span>
+              </div>
+              {['대구가톨릭대학교', '영남대학교', '대구대학교'].map(name => (
+                <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', opacity: 0.7 }}>
+                  <span style={{ fontSize: 22, filter: 'grayscale(1)' }}>🏫</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{name}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>맛집 정보 수집 중</div>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>준비 중</span>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => { setShowCampus(false); alert('오픈 알림 신청이 완료됐어요! 🔔') }} style={{ marginTop: 16, width: '100%', height: 52, borderRadius: 14, border: '1px solid rgba(255,137,4,0.4)', background: 'rgba(255,137,4,0.08)', color: '#FFB261', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+              우리 학교 오픈 알림 받기 🔔
+            </button>
+          </div>
+        </>
+      )}
 
       {/* Filter/Sort Bottom Sheet */}
       {showSheet && (

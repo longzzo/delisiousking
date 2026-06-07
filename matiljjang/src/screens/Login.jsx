@@ -1,8 +1,11 @@
 import { useNavigate } from 'react-router-dom'
 import mascotHero from '../assets/mascot-hero.png'
+import { useApp } from '../store/AppStore'
 
 export default function Login() {
   const go = useNavigate()
+  const { state } = useApp()
+  const enter = () => go(state.seenOnboarding ? '/home' : '/onboarding')
 
   return (
     <div style={{
@@ -29,12 +32,12 @@ export default function Login() {
       <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, background: '#13100E', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: '28px 24px 40px', boxShadow: '0 -20px 40px rgba(0,0,0,0.20)' }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 16 }}>경일대 학생 전용 · 1초 로그인</div>
 
-        <button onClick={() => go('/home')} style={{ width: '100%', height: 54, borderRadius: 14, border: 'none', background: '#FEE500', color: '#191600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>
+        <button onClick={enter} style={{ width: '100%', height: 54, borderRadius: 14, border: 'none', background: '#FEE500', color: '#191600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><ellipse cx="10" cy="9" rx="9" ry="7.5" fill="#191600"/><path d="M7 13.5L5.5 17l4-2.2" fill="#191600"/></svg>
           카카오로 시작하기
         </button>
 
-        <button onClick={() => go('/home')} style={{ marginTop: 10, width: '100%', height: 54, borderRadius: 14, border: '1px solid rgba(255,255,255,0.10)', background: '#1F1A17', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
+        <button onClick={enter} style={{ marginTop: 10, width: '100%', height: 54, borderRadius: 14, border: '1px solid rgba(255,255,255,0.10)', background: '#1F1A17', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
           <svg width="18" height="18" viewBox="0 0 48 48">
             <path fill="#4285F4" d="M45 24.5c0-1.5-.1-3-.4-4.4H24v8.4h11.8c-.5 2.7-2 5-4.3 6.6v5.5h7c4.1-3.8 6.5-9.4 6.5-16.1z"/>
             <path fill="#34A853" d="M24 46c5.8 0 10.6-1.9 14.2-5.2l-7-5.5c-1.9 1.3-4.4 2.1-7.2 2.1-5.5 0-10.2-3.7-11.9-8.8H4.9v5.6C8.5 41.4 15.7 46 24 46z"/>
@@ -50,7 +53,7 @@ export default function Login() {
           <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
         </div>
 
-        <button onClick={() => go('/home')} style={{ width: '100%', height: 50, borderRadius: 14, background: 'rgba(255,137,4,0.12)', border: '1px solid rgba(255,137,4,0.35)', color: '#FFB261', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}>
+        <button onClick={enter} style={{ width: '100%', height: 50, borderRadius: 14, background: 'rgba(255,137,4,0.12)', border: '1px solid rgba(255,137,4,0.35)', color: '#FFB261', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}>
           <span style={{ width: 18, height: 18, borderRadius: 5, background: '#FF8904', color: '#fff', fontSize: 11, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>K</span>
           경일대 학생 인증으로 시작하기
         </button>
