@@ -206,6 +206,13 @@ export default function Detail() {
                     <div style={{ color: '#FFD56B', fontSize: 13, fontWeight: 700 }}>{starStr(r.rating)}</div>
                   </div>
                   <div style={{ marginTop: 10, fontSize: 13, lineHeight: 1.6, color: 'rgba(255,255,255,0.85)' }}>{r.text}</div>
+                  {r.photos?.length > 0 && (
+                    <div style={{ marginTop: 10, display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none' }}>
+                      {r.photos.map((src, pi) => (
+                        <img key={pi} src={src} alt="" style={{ width: 96, height: 96, borderRadius: 10, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)' }} />
+                      ))}
+                    </div>
+                  )}
                   <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {r.tags.map(t => <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: '4px 8px', borderRadius: 999, background: 'rgba(255,137,4,0.10)', color: '#FFB261' }}># {t}</span>)}
                   </div>

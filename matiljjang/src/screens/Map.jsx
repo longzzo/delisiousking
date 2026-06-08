@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -6,6 +6,14 @@ import TabBar from '../components/TabBar'
 import { RESTAURANTS } from '../data/restaurants'
 import { useApp } from '../store/AppStore'
 import { CAMPUS, restaurantLatLng } from '../config'
+
+const MAP_FILTERS = [
+  { key: 'rating', label: '⭐ 4.5+',     test: r => r.rating >= 4.5 },
+  { key: 'solo',   label: '🪑 혼밥 가능', test: r => r.hasSolo },
+  { key: 'fast',   label: '⏱ 빠른 조리',  test: r => r.cookTime <= 10 },
+  { key: 'cheap',  label: '💰 8천원 이하', test: r => r.priceMin <= 8000 },
+  { key: 'quiet',  label: '🟢 한산',      test: r => r.busy === '여유' },
+]
 
 const ratingColor = (r) => r >= 4.5 ? '#FF8904' : r >= 4.0 ? '#FFB261' : '#9CA3AF'
 const busyStyle = (b) => b === '여유' ? { color: '#5BD06A', bg: 'rgba(91,208,106,0.12)' } : b === '보통' ? { color: '#FFB261', bg: 'rgba(255,178,97,0.12)' } : { color: '#FF6B6B', bg: 'rgba(255,107,107,0.12)' }
@@ -26,13 +34,35 @@ export default function Map() {
   const go = useNavigate()
   const { toggleWishlist, isWished } = useApp()
   const [selectedId, setSelectedId] = useState(RESTAURANTS[0].id)
-  const sel = RESTAURANTS.find(r => r.id === selectedId) || RESTAURANTS[0]
+  const [activeFilters, setActiveFilters] = useState(new Set())
+
+  const visible = useMemo(
+    () => RESTAURANTS.filter(r => [...activeFilters].every(k => MAP_FILTERS.find(f => f.key === k).test(r))),
+    [activeFilters]
+  )
+
+  const sel = RESTAURANTS.find(r => r.id === selectedId) || visible[0] || RESTAURANTS[0]
   const bs = busyStyle(sel.busy)
   const wished = isWished(sel.id)
+
+  const toggleFilter = (key) => {
+    setActiveFilters(prev => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
+  }
 
   const mapDivRef = useRef(null)
   const mapRef = useRef(null)
   const markersRef = useRef({})
+
+  // 필터로 현재 선택이 사라지면 보이는 첫 번째로 이동
+  useEffect(() => {
+    if (visible.length && !visible.some(r => r.id === selectedId)) {
+      setSelectedId(visible[0].id)
+    }
+  }, [visible, selectedId])
 
   const openNav = (e, r) => {
     e.stopPropagation()
@@ -95,14 +125,14 @@ export default function Map() {
     map.flyTo([CAMPUS.lat, CAMPUS.lng], 16, { duration: 0.5 })
   }
 
-  // 마커 갱신 (선택 상태 반영)
+  // 마커 갱신 (필터 + 선택 상태 반영)
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
     Object.values(markersRef.current).forEach(m => m.remove())
     markersRef.current = {}
 
-    RESTAURANTS.forEach(r => {
+    visible.forEach(r => {
       const { lat, lng } = restaurantLatLng(r)
       const selected = r.id === selectedId
       const size = selected ? 46 : 36
@@ -117,9 +147,11 @@ export default function Map() {
       markersRef.current[r.id] = marker
     })
 
-    const p = restaurantLatLng(sel)
-    map.panTo([p.lat, p.lng], { animate: true, duration: 0.4 })
-  }, [selectedId, sel])
+    if (visible.some(r => r.id === sel.id)) {
+      const p = restaurantLatLng(sel)
+      map.panTo([p.lat, p.lng], { animate: true, duration: 0.4 })
+    }
+  }, [visible, selectedId, sel])
 
   return (
     <div style={{ width: '100%', height: '100dvh', background: '#0E0B09', position: 'relative', color: '#fff', overflow: 'hidden' }}>
@@ -137,11 +169,19 @@ export default function Map() {
         </button>
       </div>
 
-      {/* Filter chips */}
+      {/* Filter chips — 실제 마커 필터링 */}
       <div style={{ position: 'absolute', top: 110, left: 0, right: 0, display: 'flex', gap: 8, padding: '0 16px', overflowX: 'auto', scrollbarWidth: 'none', zIndex: 500 }}>
-        {[{ label: '⭐ 4.5+', on: true }, { label: '🪑 혼밥 가능', on: false }, { label: '⏱ 빠른 조리', on: false }, { label: '💰 8천원 이하', on: true }, { label: '🟢 한산', on: false }].map((c, i) => (
-          <button key={i} onClick={() => go('/home')} style={{ flex: '0 0 auto', padding: '7px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', background: c.on ? '#FF8904' : 'rgba(20,16,14,0.88)', border: c.on ? '1px solid #FF8904' : '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)', color: '#fff', cursor: 'pointer' }}>{c.label}</button>
-        ))}
+        {MAP_FILTERS.map((c) => {
+          const on = activeFilters.has(c.key)
+          return (
+            <button key={c.key} onClick={() => toggleFilter(c.key)} style={{ flex: '0 0 auto', padding: '7px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', background: on ? '#FF8904' : 'rgba(20,16,14,0.88)', border: on ? '1px solid #FF8904' : '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)', color: '#fff', cursor: 'pointer' }}>{c.label}</button>
+          )
+        })}
+      </div>
+
+      {/* 결과 카운트 */}
+      <div style={{ position: 'absolute', top: 150, left: 16, zIndex: 500, fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.8)', background: 'rgba(20,16,14,0.85)', backdropFilter: 'blur(12px)', padding: '4px 10px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.08)' }}>
+        지도에 {visible.length}곳
       </div>
 
       {/* Recenter to campus */}
@@ -149,7 +189,17 @@ export default function Map() {
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.5" stroke="#51A2FF" strokeWidth="2"/><path d="M12 2v3M12 19v3M22 12h-3M5 12H2" stroke="#51A2FF" strokeWidth="2" strokeLinecap="round"/></svg>
       </button>
 
+      {/* Empty state */}
+      {visible.length === 0 && (
+        <div style={{ position: 'absolute', bottom: 28, left: 16, right: 16, zIndex: 500, background: '#1A1614', borderRadius: 22, padding: '24px 16px', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 20px 50px rgba(0,0,0,0.55)', textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>조건에 맞는 가게가 없어요</div>
+          <button onClick={() => setActiveFilters(new Set())} style={{ fontSize: 13, color: '#FF8904', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>필터 초기화</button>
+        </div>
+      )}
+
       {/* Preview card */}
+      {visible.length > 0 && (
       <div onClick={() => go(`/restaurant/${sel.id}`)} style={{ position: 'absolute', bottom: 28, left: 16, right: 16, zIndex: 500, background: '#1A1614', cursor: 'pointer', borderRadius: 22, padding: 16, border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 20px 50px rgba(0,0,0,0.55)', display: 'flex', gap: 14, animation: 'slideUp 0.2s ease-out' }}>
         <div style={{ width: 88, height: 88, borderRadius: 14, flexShrink: 0, background: 'repeating-linear-gradient(135deg, #2A211B 0 6px, #221B17 6px 12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38, position: 'relative' }}>
           {sel.emoji}
@@ -173,6 +223,7 @@ export default function Map() {
           </div>
         </div>
       </div>
+      )}
 
       <TabBar />
     </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import mascotHappy from '../assets/mascot-happy.png'
 import { RESTAURANTS } from '../data/restaurants'
@@ -6,6 +6,30 @@ import { useApp } from '../store/AppStore'
 
 const TAG_OPTIONS = ['가성비', '혼밥하기 좋음', '빠른 조리', '양 많음', '깔끔', '친절', '주차 가능', '데이트', '회식 OK', '늦은 시간']
 const RATING_LABELS = ['', '별로예요', '아쉬워요', '괜찮아요', '맛있어요', '인생맛집!']
+const MAX_PHOTOS = 5
+
+// 이미지를 캔버스로 축소해 dataURL(JPEG)로 변환 — localStorage 용량 절약
+function resizeImage(file, maxDim = 720, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new Image()
+      img.onload = () => {
+        let { width, height } = img
+        if (width > height && width > maxDim) { height = Math.round(height * maxDim / width); width = maxDim }
+        else if (height > maxDim) { width = Math.round(width * maxDim / height); height = maxDim }
+        const canvas = document.createElement('canvas')
+        canvas.width = width; canvas.height = height
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL('image/jpeg', quality))
+      }
+      img.onerror = reject
+      img.src = reader.result
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
 
 function Stars({ value, onChange, size = 28 }) {
   return (
@@ -21,12 +45,14 @@ export default function Review() {
   const go = useNavigate()
   const { id } = useParams()
   const { addReview } = useApp()
+  const fileRef = useRef(null)
 
   const restaurant = RESTAURANTS.find(r => r.id === Number(id)) || RESTAURANTS[0]
 
   const [overall, setOverall] = useState(5)
   const [text, setText] = useState('')
   const [tags, setTags] = useState(new Set())
+  const [photos, setPhotos] = useState([])
   const [submitted, setSubmitted] = useState(false)
 
   const toggleTag = (t) => {
@@ -34,6 +60,21 @@ export default function Review() {
     next.has(t) ? next.delete(t) : next.add(t)
     setTags(next)
   }
+
+  const onPickPhotos = async (e) => {
+    const files = Array.from(e.target.files || [])
+    e.target.value = '' // 같은 파일 다시 선택 가능하게
+    const room = MAX_PHOTOS - photos.length
+    const picked = files.slice(0, room)
+    try {
+      const dataUrls = await Promise.all(picked.map(f => resizeImage(f)))
+      setPhotos(prev => [...prev, ...dataUrls])
+    } catch {
+      alert('사진을 불러오지 못했어요')
+    }
+  }
+
+  const removePhoto = (i) => setPhotos(prev => prev.filter((_, idx) => idx !== i))
 
   const submit = () => {
     if (submitted) return
@@ -43,6 +84,7 @@ export default function Review() {
       rating: overall,
       text: text.trim() || '방문해서 먹었는데 맛있었어요!',
       tags: [...tags],
+      photos,
       date: new Date().toLocaleDateString('ko-KR'),
     })
     setSubmitted(true)
@@ -86,14 +128,23 @@ export default function Review() {
           <div style={{ marginTop: 10, fontSize: 15, fontWeight: 700, color: '#FFD56B' }}>{RATING_LABELS[overall]}</div>
         </div>
 
-        {/* Photo upload (UI only) */}
+        {/* Photo upload */}
         <div style={{ padding: '28px 16px 0' }}>
-          <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>사진 추가 <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 500 }}>(최대 5장)</span></div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ width: 74, height: 74, borderRadius: 12, border: '1.5px dashed rgba(255,137,4,0.4)', background: 'rgba(255,137,4,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, cursor: 'pointer' }}>
-              <span style={{ fontSize: 20 }}>📷</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: '#FF8904' }}>0/5</span>
-            </div>
+          <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>사진 추가 <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 500 }}>(최대 {MAX_PHOTOS}장)</span></div>
+          <input ref={fileRef} type="file" accept="image/*" multiple onChange={onPickPhotos} style={{ display: 'none' }} />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {photos.length < MAX_PHOTOS && (
+              <button onClick={() => fileRef.current?.click()} style={{ width: 74, height: 74, borderRadius: 12, border: '1.5px dashed rgba(255,137,4,0.4)', background: 'rgba(255,137,4,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, cursor: 'pointer' }}>
+                <span style={{ fontSize: 20 }}>📷</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#FF8904' }}>{photos.length}/{MAX_PHOTOS}</span>
+              </button>
+            )}
+            {photos.map((src, i) => (
+              <div key={i} style={{ position: 'relative', width: 74, height: 74, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <button onClick={() => removePhoto(i)} style={{ position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: '50%', background: 'rgba(0,0,0,0.7)', border: 'none', color: '#fff', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>✕</button>
+              </div>
+            ))}
           </div>
         </div>
 
