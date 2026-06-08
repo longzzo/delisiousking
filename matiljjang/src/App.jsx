@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Login from './screens/Login'
 import Onboarding from './screens/Onboarding'
+import TasteQuiz from './screens/TasteQuiz'
 import Home from './screens/Home'
 import Detail from './screens/Detail'
 import Review from './screens/Review'
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/taste" element={<TasteQuiz />} />
             <Route path="/home" element={<Home />} />
             <Route path="/map" element={<Map />} />
             <Route path="/wish" element={<Wishlist />} />

@@ -46,7 +46,7 @@ export default function Onboarding() {
 
   const finish = () => {
     markOnboardingSeen()
-    go('/home')
+    go('/taste')
   }
   const next = () => (last ? finish() : setI(i + 1))
 

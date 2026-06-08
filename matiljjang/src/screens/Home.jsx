@@ -4,6 +4,7 @@ import TabBar from '../components/TabBar'
 import mascotHero from '../assets/mascot-hero.png'
 import { RESTAURANTS } from '../data/restaurants'
 import { useApp } from '../store/AppStore'
+import { getUserTaste, matchPersonas, rankByTaste } from '../data/taste'
 
 const CATS = [
   { k: '전체', icon: '🍽️' }, { k: '한식', icon: '🍚' }, { k: '중식', icon: '🥟' },
@@ -47,6 +48,21 @@ function WishHeart({ id }) {
 
 export default function Home() {
   const go = useNavigate()
+  const { state } = useApp()
+
+  // 입맛 매칭
+  const userTaste = useMemo(() => getUserTaste(state, RESTAURANTS), [state])
+  const topMatch = useMemo(() => (userTaste ? matchPersonas(userTaste)[0] : null), [userTaste])
+  const recommended = useMemo(
+    () => (userTaste ? rankByTaste(userTaste, RESTAURANTS, { exclude: state.wishlist }).slice(0, 6) : []),
+    [userTaste, state.wishlist]
+  )
+  const matchPctById = useMemo(() => {
+    const m = {}
+    if (userTaste) rankByTaste(userTaste, RESTAURANTS).forEach(({ r, percent }) => { m[r.id] = percent })
+    return m
+  }, [userTaste])
+
   const [cat, setCat] = useState('전체')
   const [budget, setBudget] = useState('전체')
   const [sort, setSort] = useState('distance')
@@ -182,6 +198,60 @@ export default function Home() {
           </div>
         )}
 
+        {/* 입맛 추천 — 취향 프로필이 있을 때 */}
+        {!query && activeCount === 0 && topMatch && (
+          <div style={{ padding: '20px 0 0' }}>
+            <div style={{ padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: -0.3 }}>🎯 나와 입맛이 비슷한</div>
+              <button onClick={() => go('/taste')} style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}>다시 진단</button>
+            </div>
+
+            {/* 페르소나 매칭 카드 */}
+            <div style={{ margin: '0 20px 14px', padding: 16, borderRadius: 18, background: 'linear-gradient(135deg, rgba(255,137,4,0.14), rgba(251,44,54,0.08))', border: '1px solid rgba(255,137,4,0.25)', display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>{topMatch.persona.emoji}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>당신의 입맛 유형</div>
+                <div style={{ fontSize: 17, fontWeight: 800 }}>{topMatch.persona.name}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{topMatch.persona.blurb}</div>
+              </div>
+              <div style={{ textAlign: 'center', flexShrink: 0 }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#FF8904', lineHeight: 1 }}>{topMatch.percent}%</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>일치</div>
+              </div>
+            </div>
+
+            {/* 취향 랭킹 가로 스크롤 */}
+            <div style={{ padding: '0 20px', fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>이 유형이 좋아하는 맛집</div>
+            <div style={{ display: 'flex', gap: 12, overflowX: 'auto', padding: '0 20px 4px', scrollbarWidth: 'none' }}>
+              {recommended.map(({ r, percent }) => (
+                <div key={r.id} onClick={() => go(`/restaurant/${r.id}`)} style={{ flex: '0 0 auto', width: 150, background: '#1A1614', borderRadius: 16, padding: 12, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.04)' }}>
+                  <div style={{ width: '100%', height: 84, borderRadius: 12, background: 'repeating-linear-gradient(135deg, #2A211B 0 6px, #221B17 6px 12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34, position: 'relative' }}>
+                    {r.emoji}
+                    <div style={{ position: 'absolute', top: 6, right: 6, background: 'linear-gradient(135deg, #FF8904, #FB2C36)', color: '#fff', fontSize: 10, fontWeight: 800, padding: '3px 7px', borderRadius: 999 }}>매치 {percent}%</div>
+                  </div>
+                  <div style={{ marginTop: 8, fontSize: 14, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</div>
+                  <div style={{ marginTop: 3, fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>{r.category} · ★ {r.rating}</div>
+                  <div style={{ marginTop: 4, fontSize: 11, fontWeight: 700, color: '#FFB261' }}>{r.priceMin.toLocaleString()}원~</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 입맛 진단 유도 — 프로필이 아직 없을 때 */}
+        {!query && activeCount === 0 && !topMatch && (
+          <div style={{ padding: '20px 20px 0' }}>
+            <div onClick={() => go('/taste')} style={{ borderRadius: 18, padding: 16, background: 'linear-gradient(135deg, rgba(255,137,4,0.14), rgba(251,44,54,0.08))', border: '1px dashed rgba(255,137,4,0.4)', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
+              <div style={{ fontSize: 30 }}>🍽️</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 800 }}>1분 입맛 진단하기</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>나와 입맛이 비슷한 사람의 맛집을 추천받아요</div>
+              </div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round"/></svg>
+            </div>
+          </div>
+        )}
+
         {/* Category */}
         <div style={{ padding: '22px 0 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', marginBottom: 12 }}>
@@ -273,7 +343,10 @@ export default function Home() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: -0.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{r.name}</div>
+                    <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: -0.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</span>
+                      {matchPctById[r.id] >= 80 && <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, color: '#FF8904', background: 'rgba(255,137,4,0.15)', padding: '2px 6px', borderRadius: 999 }}>매치 {matchPctById[r.id]}%</span>}
+                    </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                       <WishHeart id={r.id} />
                       <div style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 999, color: bc.color, background: bc.bg }}>● {r.busy}</div>

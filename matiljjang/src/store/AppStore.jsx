@@ -11,6 +11,7 @@ const defaultState = {
   stickers: [],       // 해금된 스티커 id
   coupons: [],        // 해금된 쿠폰 id
   seenOnboarding: false,
+  tasteSeed: null,    // 입맛 진단 결과 벡터
   rewardQueue: [],    // 축하 연출 대기열
 }
 
@@ -32,6 +33,7 @@ function loadState() {
         stickers: Array.isArray(p.stickers) ? p.stickers : [],
         coupons: Array.isArray(p.coupons) ? p.coupons : [],
         seenOnboarding: !!p.seenOnboarding,
+        tasteSeed: p.tasteSeed && typeof p.tasteSeed === 'object' ? p.tasteSeed : null,
         rewardQueue: [],
       }
     }
@@ -105,6 +107,8 @@ function reducer(state, action) {
       return { ...state, seenOnboarding: true }
     case 'RESET_ONBOARDING':
       return { ...state, seenOnboarding: false }
+    case 'SET_TASTE_SEED':
+      return { ...state, tasteSeed: action.payload }
     default:
       return state
   }
@@ -128,6 +132,7 @@ export function AppProvider({ children }) {
     dismissReward: (eid) => dispatch({ type: 'DISMISS_REWARD', payload: eid }),
     markOnboardingSeen: () => dispatch({ type: 'SEEN_ONBOARDING' }),
     resetOnboarding: () => dispatch({ type: 'RESET_ONBOARDING' }),
+    setTasteSeed: (vec) => dispatch({ type: 'SET_TASTE_SEED', payload: vec }),
     getReviews: (restaurantId) => state.reviews.filter(r => r.restaurantId === restaurantId),
     isWished: (id) => state.wishlist.includes(id),
   }

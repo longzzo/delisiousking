@@ -25,6 +25,7 @@ export default function MyPage() {
 
   const menus = [
     { icon: '📍', label: '방문 기록', value: `${reviewCount}곳`, action: () => go('/my-reviews') },
+    { icon: '🎯', label: '입맛 다시 진단', value: '', action: () => go('/taste') },
     { icon: '🎬', label: '맛일짱 소개 다시보기', value: '', action: replayIntro },
     { icon: '🏆', label: '학생 인증', value: '경일대 ✓', action: () => alert('이미 인증된 계정이에요') },
     { icon: '🔔', label: '알림 설정', value: '', action: () => alert('준비 중인 기능이에요') },

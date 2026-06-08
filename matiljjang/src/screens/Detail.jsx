@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { RESTAURANTS } from '../data/restaurants'
 import { useApp } from '../store/AppStore'
+import { getUserTaste, matchPersonas, reviewPersona } from '../data/taste'
 
 const RATING_BARS = [{ pct: '72%', cnt: 235 }, { pct: '20%', cnt: 65 }, { pct: '5%', cnt: 16 }, { pct: '2%', cnt: 6 }, { pct: '1%', cnt: 4 }]
 
@@ -12,8 +13,13 @@ function starStr(n) {
 export default function Detail() {
   const go = useNavigate()
   const { id } = useParams()
-  const { toggleWishlist, isWished, getReviews } = useApp()
+  const { state, toggleWishlist, isWished, getReviews } = useApp()
   const [toast, setToast] = useState('')
+
+  const myPersonaId = useMemo(() => {
+    const t = getUserTaste(state, RESTAURANTS)
+    return t ? matchPersonas(t)[0]?.persona.id : null
+  }, [state])
 
   const showToast = (msg) => {
     setToast(msg)
@@ -34,6 +40,19 @@ export default function Detail() {
 
   const wished = isWished(restaurant.id)
   const userReviews = getReviews(restaurant.id)
+
+  // 시드 리뷰에 입맛 페르소나를 붙이고, 내 입맛과 같은 유형을 위로 정렬
+  const sortedSeedReviews = useMemo(() => {
+    return restaurant.seedReviews
+      .map(rv => {
+        const persona = reviewPersona(rv, restaurant)
+        return { ...rv, persona, similar: myPersonaId && persona.id === myPersonaId }
+      })
+      .sort((a, b) => (b.similar ? 1 : 0) - (a.similar ? 1 : 0))
+  }, [restaurant, myPersonaId])
+
+  const similarCount = sortedSeedReviews.filter(r => r.similar).length
+
   const badges = [
     { t: restaurant.tag, c: '#FFB261', bg: 'rgba(255,137,4,0.15)' },
     ...(restaurant.hasSolo ? [{ t: '🪑 1인석 있음', c: '#5BD06A', bg: 'rgba(91,208,106,0.12)' }] : []),
@@ -221,16 +240,26 @@ export default function Detail() {
             </div>
           )}
 
-          {/* Seed reviews */}
+          {/* 비슷한 입맛 안내 */}
+          {myPersonaId && similarCount > 0 && (
+            <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,137,4,0.08)', border: '1px solid rgba(255,137,4,0.2)', fontSize: 12, color: '#FFB261', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+              🎯 나와 입맛이 비슷한 리뷰어 {similarCount}명의 후기를 위로 모았어요
+            </div>
+          )}
+
+          {/* Seed reviews (입맛 페르소나 + 유사 입맛 우선) */}
           <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {restaurant.seedReviews.map((r, i) => (
-              <div key={`seed-${i}`} style={{ padding: 14, borderRadius: 14, background: '#1A1614', border: '1px solid rgba(255,255,255,0.04)' }}>
+            {sortedSeedReviews.map((r, i) => (
+              <div key={`seed-${i}`} style={{ padding: 14, borderRadius: 14, background: '#1A1614', border: r.similar ? '1px solid rgba(255,137,4,0.35)' : '1px solid rgba(255,255,255,0.04)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: ['linear-gradient(135deg, #FF8904, #FB2C36)', 'linear-gradient(135deg, #51A2FF, #2B7FFF)', 'linear-gradient(135deg, #5BD06A, #2EA043)'][i % 3], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>{r.author.charAt(0)}</div>
+                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: ['linear-gradient(135deg, #FF8904, #FB2C36)', 'linear-gradient(135deg, #51A2FF, #2B7FFF)', 'linear-gradient(135deg, #5BD06A, #2EA043)'][i % 3], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>{r.persona.emoji}</div>
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 700 }}>{r.author}</div>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>{r.when}</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
+                        {r.author}
+                        {r.similar && <span style={{ fontSize: 9, color: '#FF8904', fontWeight: 700, padding: '1px 6px', borderRadius: 999, background: 'rgba(255,137,4,0.15)' }}>나랑 입맛 비슷</span>}
+                      </div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>{r.persona.emoji} {r.persona.name} · {r.when}</div>
                     </div>
                   </div>
                   <div style={{ color: '#FFD56B', fontSize: 13, fontWeight: 700 }}>{starStr(r.rating)}</div>
