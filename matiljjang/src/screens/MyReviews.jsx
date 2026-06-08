@@ -51,6 +51,11 @@ export default function MyReviews() {
                   </div>
                   <div style={{ color: '#FFD56B', fontSize: 13, fontWeight: 700 }}>{starStr(r.rating)}</div>
                 </div>
+                {r.menus?.length > 0 && (
+                  <div style={{ marginBottom: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {r.menus.map(mn => <span key={mn} style={{ fontSize: 10, fontWeight: 700, padding: '4px 9px', borderRadius: 8, background: 'rgba(81,162,255,0.12)', color: '#7FBFFF', border: '1px solid rgba(81,162,255,0.25)' }}>🍽️ {mn}</span>)}
+                  </div>
+                )}
                 <div style={{ fontSize: 13, lineHeight: 1.6, color: 'rgba(255,255,255,0.85)' }}>{r.text}</div>
                 {r.tags?.length > 0 && (
                   <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>

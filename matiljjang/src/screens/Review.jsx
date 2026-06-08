@@ -52,6 +52,7 @@ export default function Review() {
   const [overall, setOverall] = useState(5)
   const [text, setText] = useState('')
   const [tags, setTags] = useState(new Set())
+  const [selectedMenus, setSelectedMenus] = useState(new Set())
   const [photos, setPhotos] = useState([])
   const [submitted, setSubmitted] = useState(false)
 
@@ -59,6 +60,12 @@ export default function Review() {
     const next = new Set(tags)
     next.has(t) ? next.delete(t) : next.add(t)
     setTags(next)
+  }
+
+  const toggleMenu = (name) => {
+    const next = new Set(selectedMenus)
+    next.has(name) ? next.delete(name) : next.add(name)
+    setSelectedMenus(next)
   }
 
   const onPickPhotos = async (e) => {
@@ -78,12 +85,17 @@ export default function Review() {
 
   const submit = () => {
     if (submitted) return
+    if (selectedMenus.size === 0) {
+      alert('드신 메뉴를 1개 이상 선택해주세요')
+      return
+    }
     addReview({
       restaurantId: restaurant.id,
       author: '익명 학생',
       rating: overall,
       text: text.trim() || '방문해서 먹었는데 맛있었어요!',
       tags: [...tags],
+      menus: [...selectedMenus],
       photos,
       date: new Date().toLocaleDateString('ko-KR'),
     })
@@ -126,6 +138,27 @@ export default function Review() {
             <Stars value={overall} onChange={setOverall} size={40} />
           </div>
           <div style={{ marginTop: 10, fontSize: 15, fontWeight: 700, color: '#FFD56B' }}>{RATING_LABELS[overall]}</div>
+        </div>
+
+        {/* Menu select — 메뉴별 리뷰 */}
+        <div style={{ padding: '28px 16px 0' }}>
+          <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>어떤 메뉴를 드셨나요? <span style={{ color: '#FB2C36', fontSize: 12 }}>*</span></div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 12 }}>먹은 메뉴를 선택하면 메뉴별 평점에 반영돼요</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {restaurant.menus.map(m => {
+              const on = selectedMenus.has(m.name)
+              return (
+                <button key={m.name} onClick={() => toggleMenu(m.name)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, background: on ? 'rgba(255,137,4,0.12)' : '#1A1614', border: on ? '1.5px solid #FF8904' : '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', textAlign: 'left' }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: 'repeating-linear-gradient(135deg, #2A211B 0 4px, #221B17 4px 8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19 }}>{m.emoji}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{m.name}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{m.price.toLocaleString()}원</div>
+                  </div>
+                  <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, border: on ? 'none' : '1.5px solid rgba(255,255,255,0.2)', background: on ? '#FF8904' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 800 }}>{on ? '✓' : ''}</div>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {/* Photo upload */}

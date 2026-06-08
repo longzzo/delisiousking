@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { RESTAURANTS } from '../data/restaurants'
 import { useApp } from '../store/AppStore'
 import { getUserTaste, matchPersonas, reviewPersona } from '../data/taste'
+import { reviewMenusOf, menuStats } from '../data/menuReviews'
 
 const RATING_BARS = [{ pct: '72%', cnt: 235 }, { pct: '20%', cnt: 65 }, { pct: '5%', cnt: 16 }, { pct: '2%', cnt: 6 }, { pct: '1%', cnt: 4 }]
 
@@ -15,6 +16,8 @@ export default function Detail() {
   const { id } = useParams()
   const { state, toggleWishlist, isWished, getReviews } = useApp()
   const [toast, setToast] = useState('')
+  const [menuFilter, setMenuFilter] = useState(null)
+  const reviewsRef = useRef(null)
 
   const myPersonaId = useMemo(() => {
     const t = getUserTaste(state, RESTAURANTS)
@@ -52,6 +55,21 @@ export default function Detail() {
   }, [restaurant, myPersonaId])
 
   const similarCount = sortedSeedReviews.filter(r => r.similar).length
+
+  // 메뉴별 리뷰 집계
+  const stats = useMemo(
+    () => menuStats(restaurant, [...userReviews, ...restaurant.seedReviews]),
+    [restaurant, userReviews]
+  )
+  const menuFilterMatch = (rv) => !menuFilter || reviewMenusOf(rv, restaurant).includes(menuFilter)
+  const shownUserReviews = userReviews.filter(menuFilterMatch)
+  const shownSeedReviews = sortedSeedReviews.filter(menuFilterMatch)
+  const shownTotal = shownUserReviews.length + shownSeedReviews.length
+
+  const focusMenu = (name) => {
+    setMenuFilter(name)
+    setTimeout(() => reviewsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
+  }
 
   const badges = [
     { t: restaurant.tag, c: '#FFB261', bg: 'rgba(255,137,4,0.15)' },
@@ -168,28 +186,54 @@ export default function Detail() {
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>전체 {restaurant.menus.length}개</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {restaurant.menus.map((m, i) => (
-              <div key={i} style={{ padding: 12, borderRadius: 14, background: '#1A1614', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', gap: 12, alignItems: 'center' }}>
-                <div style={{ width: 52, height: 52, borderRadius: 10, flexShrink: 0, background: 'repeating-linear-gradient(135deg, #2A211B 0 4px, #221B17 4px 8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>{m.emoji}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 14, fontWeight: 700 }}>{m.name}</span>
-                    {m.tag && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: m.tag==='베스트'?'#FB2C36':'rgba(255,137,4,0.18)', color: m.tag==='베스트'?'#fff':'#FFB261' }}>{m.tag}</span>}
+            {restaurant.menus.map((m, i) => {
+              const st = stats[m.name] || { count: 0, avg: null }
+              return (
+                <div key={i} onClick={() => st.count > 0 && focusMenu(m.name)} style={{ padding: 12, borderRadius: 14, background: '#1A1614', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', gap: 12, alignItems: 'center', cursor: st.count > 0 ? 'pointer' : 'default' }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 10, flexShrink: 0, background: 'repeating-linear-gradient(135deg, #2A211B 0 4px, #221B17 4px 8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>{m.emoji}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 14, fontWeight: 700 }}>{m.name}</span>
+                      {m.tag && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: m.tag==='베스트'?'#FB2C36':'rgba(255,137,4,0.18)', color: m.tag==='베스트'?'#fff':'#FFB261' }}>{m.tag}</span>}
+                    </div>
+                    {m.desc && <div style={{ marginTop: 2, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{m.desc}</div>}
+                    {st.count > 0
+                      ? <div style={{ marginTop: 5, fontSize: 11, fontWeight: 700, color: '#FFD56B' }}>★ {st.avg} <span style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 500 }}>· 리뷰 {st.count} ›</span></div>
+                      : <div style={{ marginTop: 5, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>아직 리뷰 없음</div>}
                   </div>
-                  {m.desc && <div style={{ marginTop: 2, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{m.desc}</div>}
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#FFB261', flexShrink: 0 }}>{m.price.toLocaleString()}원</div>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: '#FFB261', flexShrink: 0 }}>{m.price.toLocaleString()}원</div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
         {/* Reviews */}
-        <div style={{ padding: '28px 20px 0' }}>
+        <div ref={reviewsRef} style={{ padding: '28px 20px 0' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: -0.3 }}>학생 리뷰</div>
             <div style={{ fontSize: 12, color: '#FF8904', fontWeight: 700 }}>전체 {restaurant.reviewCount + userReviews.length}개 ›</div>
           </div>
+
+          {/* 메뉴별 리뷰 필터 */}
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none', marginBottom: 14, paddingBottom: 2 }}>
+            <button onClick={() => setMenuFilter(null)} style={{ flex: '0 0 auto', padding: '7px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', background: !menuFilter ? '#FF8904' : 'rgba(255,255,255,0.05)', border: !menuFilter ? '1px solid #FF8904' : '1px solid rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer' }}>전체 메뉴</button>
+            {restaurant.menus.filter(m => (stats[m.name]?.count || 0) > 0).map(m => {
+              const on = menuFilter === m.name
+              return (
+                <button key={m.name} onClick={() => setMenuFilter(on ? null : m.name)} style={{ flex: '0 0 auto', padding: '7px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', background: on ? '#FF8904' : 'rgba(255,255,255,0.05)', border: on ? '1px solid #FF8904' : '1px solid rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer' }}>
+                  {m.emoji} {m.name} <span style={{ color: on ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.4)' }}>{stats[m.name].count}</span>
+                </button>
+              )
+            })}
+          </div>
+
+          {menuFilter && (
+            <div style={{ marginBottom: 12, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,137,4,0.08)', border: '1px solid rgba(255,137,4,0.2)', fontSize: 12, color: '#FFB261', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>🍽️ "{menuFilter}" 리뷰 {shownTotal}개 · 평균 ★ {stats[menuFilter]?.avg}</span>
+              <button onClick={() => setMenuFilter(null)} style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', background: 'none', border: 'none', cursor: 'pointer' }}>전체보기</button>
+            </div>
+          )}
           {/* Rating summary */}
           <div style={{ padding: 14, borderRadius: 14, background: '#1A1614', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: 18 }}>
             <div style={{ textAlign: 'center' }}>
@@ -210,9 +254,9 @@ export default function Detail() {
           </div>
 
           {/* User reviews first (newest) */}
-          {userReviews.length > 0 && (
+          {shownUserReviews.length > 0 && (
             <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {userReviews.map((r, i) => (
+              {shownUserReviews.map((r, i) => (
                 <div key={`user-${i}`} style={{ padding: 14, borderRadius: 14, background: '#1A1614', border: '1px solid rgba(255,137,4,0.18)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -223,6 +267,11 @@ export default function Detail() {
                       </div>
                     </div>
                     <div style={{ color: '#FFD56B', fontSize: 13, fontWeight: 700 }}>{starStr(r.rating)}</div>
+                  </div>
+                  <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {reviewMenusOf(r, restaurant).map(mn => (
+                      <span key={mn} style={{ fontSize: 10, fontWeight: 700, padding: '4px 9px', borderRadius: 8, background: 'rgba(81,162,255,0.12)', color: '#7FBFFF', border: '1px solid rgba(81,162,255,0.25)' }}>🍽️ {mn}</span>
+                    ))}
                   </div>
                   <div style={{ marginTop: 10, fontSize: 13, lineHeight: 1.6, color: 'rgba(255,255,255,0.85)' }}>{r.text}</div>
                   {r.photos?.length > 0 && (
@@ -241,7 +290,7 @@ export default function Detail() {
           )}
 
           {/* 비슷한 입맛 안내 */}
-          {myPersonaId && similarCount > 0 && (
+          {!menuFilter && myPersonaId && similarCount > 0 && (
             <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,137,4,0.08)', border: '1px solid rgba(255,137,4,0.2)', fontSize: 12, color: '#FFB261', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
               🎯 나와 입맛이 비슷한 리뷰어 {similarCount}명의 후기를 위로 모았어요
             </div>
@@ -249,7 +298,7 @@ export default function Detail() {
 
           {/* Seed reviews (입맛 페르소나 + 유사 입맛 우선) */}
           <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {sortedSeedReviews.map((r, i) => (
+            {shownSeedReviews.map((r, i) => (
               <div key={`seed-${i}`} style={{ padding: 14, borderRadius: 14, background: '#1A1614', border: r.similar ? '1px solid rgba(255,137,4,0.35)' : '1px solid rgba(255,255,255,0.04)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -263,6 +312,11 @@ export default function Detail() {
                     </div>
                   </div>
                   <div style={{ color: '#FFD56B', fontSize: 13, fontWeight: 700 }}>{starStr(r.rating)}</div>
+                </div>
+                <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {reviewMenusOf(r, restaurant).map(mn => (
+                    <span key={mn} style={{ fontSize: 10, fontWeight: 700, padding: '4px 9px', borderRadius: 8, background: 'rgba(81,162,255,0.12)', color: '#7FBFFF', border: '1px solid rgba(81,162,255,0.25)' }}>🍽️ {mn}</span>
+                  ))}
                 </div>
                 <div style={{ marginTop: 10, fontSize: 13, lineHeight: 1.6, color: 'rgba(255,255,255,0.85)' }}>{r.text}</div>
                 <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
