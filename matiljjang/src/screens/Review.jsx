@@ -117,7 +117,7 @@ export default function Review() {
         >임시저장</button>
       </div>
 
-      <div className="screen-wrap" style={{ paddingTop: 108, paddingBottom: 100 }}>
+      <div className="screen-wrap" style={{ paddingTop: 108, paddingBottom: 128 }}>
         {/* Restaurant chip */}
         <div style={{ margin: '0 16px', padding: 12, borderRadius: 14, background: '#1A1614', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 44, height: 44, borderRadius: 10, background: 'repeating-linear-gradient(135deg, #2A211B 0 4px, #221B17 4px 8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{restaurant.emoji}</div>

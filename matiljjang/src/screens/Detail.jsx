@@ -111,7 +111,7 @@ export default function Detail() {
 
   return (
     <div style={{ width: '100%', height: '100dvh', background: '#0E0B09', position: 'relative', color: '#fff', overflow: 'hidden' }}>
-      <div className="screen-wrap" style={{ paddingBottom: 96 }}>
+      <div className="screen-wrap" style={{ paddingBottom: 124 }}>
 
         {/* Hero */}
         <div style={{ position: 'relative', height: 260, background: 'linear-gradient(180deg, #3A2A1E, #1A1310)', overflow: 'hidden' }}>

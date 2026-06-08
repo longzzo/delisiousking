@@ -260,7 +260,7 @@ export default function Home() {
               <button onClick={() => setCat('전체')} style={{ fontSize: 12, color: '#FF8904', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>전체보기</button>
             )}
           </div>
-          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', padding: '0 20px', scrollbarWidth: 'none' }}>
+          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', overflowY: 'visible', padding: '8px 20px 0', scrollbarWidth: 'none' }}>
             {CATS.map(c => {
               const isActive = cat === c.k
               const count = catCounts[c.k] ?? 0
@@ -343,8 +343,8 @@ export default function Home() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: -0.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</span>
+                    <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: -0.2, flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, marginRight: 8 }}>
+                      <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</span>
                       {matchPctById[r.id] >= 80 && <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, color: '#FF8904', background: 'rgba(255,137,4,0.15)', padding: '2px 6px', borderRadius: 999 }}>매치 {matchPctById[r.id]}%</span>}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
