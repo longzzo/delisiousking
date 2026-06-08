@@ -62,6 +62,7 @@ button { white-space: nowrap; font-family: inherit; }
   70%  { transform: scale(1.6); opacity: 0; }
   100% { transform: scale(1.6); opacity: 0; }
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 .page-anim {
   animation: pageIn 0.28s cubic-bezier(.22,.61,.36,1);
   will-change: opacity, transform;

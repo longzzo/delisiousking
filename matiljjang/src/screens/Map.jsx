@@ -76,10 +76,24 @@ export default function Map() {
     const pts = RESTAURANTS.map(r => { const p = restaurantLatLng(r); return [p.lat, p.lng] })
     pts.push([CAMPUS.lat, CAMPUS.lng])
     map.fitBounds(L.latLngBounds(pts).pad(0.15))
-    setTimeout(() => map.invalidateSize(), 60)
 
-    return () => { map.remove(); mapRef.current = null; markersRef.current = {} }
+    // 화면 전환 애니메이션(0.28s) 동안 컨테이너 크기가 확정되도록 여러 번 보정
+    const timers = [0, 150, 360].map(t => setTimeout(() => map.invalidateSize(), t))
+    const onResize = () => map.invalidateSize()
+    window.addEventListener('resize', onResize)
+
+    return () => {
+      timers.forEach(clearTimeout)
+      window.removeEventListener('resize', onResize)
+      map.remove(); mapRef.current = null; markersRef.current = {}
+    }
   }, [])
+
+  const recenter = () => {
+    const map = mapRef.current
+    if (!map) return
+    map.flyTo([CAMPUS.lat, CAMPUS.lng], 16, { duration: 0.5 })
+  }
 
   // 마커 갱신 (선택 상태 반영)
   useEffect(() => {
@@ -129,6 +143,11 @@ export default function Map() {
           <button key={i} onClick={() => go('/home')} style={{ flex: '0 0 auto', padding: '7px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', background: c.on ? '#FF8904' : 'rgba(20,16,14,0.88)', border: c.on ? '1px solid #FF8904' : '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)', color: '#fff', cursor: 'pointer' }}>{c.label}</button>
         ))}
       </div>
+
+      {/* Recenter to campus */}
+      <button onClick={recenter} title="현위치로" style={{ position: 'absolute', right: 16, bottom: 196, zIndex: 500, width: 44, height: 44, borderRadius: 14, background: 'rgba(20,16,14,0.92)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 6px 18px rgba(0,0,0,0.45)' }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.5" stroke="#51A2FF" strokeWidth="2"/><path d="M12 2v3M12 19v3M22 12h-3M5 12H2" stroke="#51A2FF" strokeWidth="2" strokeLinecap="round"/></svg>
+      </button>
 
       {/* Preview card */}
       <div onClick={() => go(`/restaurant/${sel.id}`)} style={{ position: 'absolute', bottom: 28, left: 16, right: 16, zIndex: 500, background: '#1A1614', cursor: 'pointer', borderRadius: 22, padding: 16, border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 20px 50px rgba(0,0,0,0.55)', display: 'flex', gap: 14, animation: 'slideUp 0.2s ease-out' }}>

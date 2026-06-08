@@ -132,7 +132,7 @@ export default function Detail() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ width: 20 }}>💰</span>
-              <span style={{ color: 'rgba(255,255,255,0.85)', flex: 1 }}>1인 평균 <b style={{ color: '#fff' }}>{Math.round((restaurant.priceMin + restaurant.priceMax) / 2 / 500) * 500 / 1000 * 1000 > 0 ? ((restaurant.priceMin + restaurant.priceMax) / 2).toLocaleString() : '?'}원</b></span>
+              <span style={{ color: 'rgba(255,255,255,0.85)', flex: 1 }}>1인 평균 <b style={{ color: '#fff' }}>{(Math.round((restaurant.priceMin + restaurant.priceMax) / 2 / 500) * 500).toLocaleString()}원</b></span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ width: 20 }}>📊</span>

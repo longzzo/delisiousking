@@ -128,7 +128,14 @@ export default function Home() {
     (sort !== 'distance' ? 1 : 0) +
     Object.values(extraFilters).filter(Boolean).length
 
-  const todayPick = RESTAURANTS[0]
+  // 오늘의 추천: 평점 높은 가게 중 날짜 기준으로 매일 바뀜
+  const todayPick = useMemo(() => {
+    const pool = RESTAURANTS.filter(r => r.rating >= 4.6)
+    const base = pool.length ? pool : RESTAURANTS
+    const now = new Date()
+    const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000)
+    return base[dayOfYear % base.length]
+  }, [])
   const sortLabel = SORTS.find(s => s.k === sort)?.label ?? '거리 가까운 순'
 
   return (
